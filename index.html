@@ -1,0 +1,2996 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>講義タスク帳</title>
+<meta name="description" content="講義の後に選ぶだけで、課題・小テスト・復習を記録するアプリ">
+<meta name="theme-color" content="#2f5bd8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="講義タスク帳">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+</head>
+<body>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=BIZ+UDPGothic:wght@400;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: one column. Banner asks about today's classes; main view lists open items by due date; check-in is a full-width step screen. */
+:root {
+  --bg: #eef1f6;
+  --surface: #fcfdff;
+  --surface-2: #f2f4f9;
+  --ink: #18202e;
+  --muted: #576175;
+  --line: #d5dbe6;
+  --line-strong: #9da8bb;
+  --accent: #2f5bd8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e4ebfc;
+  --hero-bg: #23409a; --hero-ink: #ffffff;
+  --warn: #8f5a00;
+  --bad: #b3261e;
+  --good: #1c7a4d;
+  --c0: #2f5bd8; --c1: #d8572f; --c2: #2e9d7a; --c3: #7a5bd8; --c4: #c2417e; --c5: #a87900; --c6: #1f8fb0; --c7: #6b7a8f;
+  --f-body: "BIZ UDPGothic", "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic UI", "Meiryo", system-ui, sans-serif;
+  --f-num: "IBM Plex Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --fs-s: 13px; --fs-b: 16px; --fs-l: 18px; --fs-q: 24px;
+}
+/* 表示：システム（指定なし）／ライト／ダーク。data-ui はこのページの設定、data-theme は表示側の設定 */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-ui="light"]) {
+    --bg: #12161d;
+    --surface: #1b212b;
+    --surface-2: #232a36;
+    --ink: #e6eaf1;
+    --muted: #9ca7ba;
+    --line: #2d3544;
+    --line-strong: #4a5568;
+    --accent: #86a1ff;
+    --accent-ink: #0d1424;
+    --accent-soft: #222c4d;
+    --hero-bg: #2a3f8f; --hero-ink: #ffffff;
+    --warn: #f0b45a;
+    --bad: #ff8f86;
+    --good: #6fd3a1;
+    --c0: #8fa8ff; --c1: #f2946f; --c2: #6fd1ae; --c3: #b39cff; --c4: #f08dba; --c5: #e8c15a; --c6: #6cc9e6; --c7: #a9b6c8;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"]:not([data-ui="light"]), :root[data-ui="dark"] {
+  --bg: #12161d;
+  --surface: #1b212b;
+  --surface-2: #232a36;
+  --ink: #e6eaf1;
+  --muted: #9ca7ba;
+  --line: #2d3544;
+  --line-strong: #4a5568;
+  --accent: #86a1ff;
+  --accent-ink: #0d1424;
+  --accent-soft: #222c4d;
+  --hero-bg: #2a3f8f; --hero-ink: #ffffff;
+  --warn: #f0b45a;
+  --bad: #ff8f86;
+  --good: #6fd3a1;
+  --c0: #8fa8ff; --c1: #f2946f; --c2: #6fd1ae; --c3: #b39cff; --c4: #f08dba; --c5: #e8c15a; --c6: #6cc9e6; --c7: #a9b6c8;
+  color-scheme: dark;
+}
+:root[data-ui="light"] { color-scheme: light; }
+
+* { box-sizing: border-box; }
+/* no double-tap zoom when tapping buttons quickly (timetable cells etc.) */
+html, button, a, input, select, label, summary { touch-action: manipulation; }
+body {
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--f-body);
+  font-size: 15px;
+  line-height: 1.65;
+  padding-block: 24px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+}
+.wrap { max-width: 640px; margin: 0 auto; display: grid; gap: 20px; }
+.wrap > * { min-width: 0; }
+#main { display: grid; gap: 20px; min-width: 0; }
+h1, h2, p, ul { margin: 0; }
+ul { padding: 0; list-style: none; }
+h1 { font-size: 22px; font-weight: 700; }
+.head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: flex-end; gap: 8px 12px; }
+.stats { color: var(--muted); font-size: 14px; font-variant-numeric: tabular-nums; }
+.stats b { color: var(--ink); font-weight: 700; }
+.stats .bad { color: var(--bad); font-weight: 700; }
+
+.banner { background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 6px; padding: 12px 14px; display: grid; gap: 8px; }
+.banner .bq { font-weight: 700; }
+.banner .bs { font-size: 13.5px; color: var(--muted); }
+
+/* Collapsible panels: whole row is the tap target, chevron on the right shows it opens. */
+details.panel { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; min-width: 0; }
+details.panel > summary {
+  list-style: none;
+  cursor: pointer;
+  min-height: 52px;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary::after {
+  content: "";
+  flex: none;
+  width: 9px;
+  height: 9px;
+  margin-right: 4px;
+  border-right: 2px solid var(--muted);
+  border-bottom: 2px solid var(--muted);
+  transform: rotate(45deg);
+  margin-top: -4px;
+}
+details.panel[open] > summary::after { transform: rotate(-135deg); margin-top: 4px; }
+@media (prefers-reduced-motion: no-preference) { details.panel > summary::after { transition: transform 150ms ease; } }
+.ptitle { display: grid; gap: 1px; min-width: 0; }
+.ptitle b { font-weight: 700; }
+.ptitle b .n { font-weight: 400; color: var(--muted); margin-left: 6px; font-variant-numeric: tabular-nums; }
+.ptitle small { font-size: 12.5px; color: var(--muted); }
+details.panel .items { border: 0; border-top: 1px solid var(--line); border-radius: 0 0 6px 6px; }
+.form { display: grid; gap: 12px; padding: 4px 14px 14px; }
+#addsum { font-weight: 700; }
+.row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.field { display: grid; gap: 4px; min-width: 0; }
+.field > span, .legend { font-size: 12.5px; font-weight: 700; color: var(--muted); }
+select, input[type="text"], input[type="date"], input[type="time"] {
+  min-height: 44px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 16px;
+  padding: 0 10px;
+  min-width: 0;
+  max-width: 100%;
+}
+.kinds { display: flex; gap: 6px; flex-wrap: wrap; }
+.kinds label { display: inline-flex; position: relative; }
+.kinds input { position: absolute; opacity: 0; pointer-events: none; }
+.kinds span {
+  min-height: 40px;
+  padding: 0 14px;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  cursor: pointer;
+}
+.kinds input:checked + span { border-color: var(--accent); color: var(--accent); font-weight: 700; box-shadow: inset 0 0 0 1px var(--accent); }
+.kinds input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+.quick { display: flex; gap: 6px; flex-wrap: wrap; }
+
+.btn { min-height: 44px; padding: 0 16px; border-radius: 6px; border: 1px solid var(--line); background: transparent; color: var(--ink); font: inherit; font-weight: 700; cursor: pointer; }
+.btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.small { min-height: 36px; padding: 0 12px; font-weight: 500; font-size: 14px; }
+.link { background: none; border: 0; padding: 6px 2px; min-height: 32px; font: inherit; font-size: 13px; color: var(--muted); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.link.danger { color: var(--bad); font-weight: 700; }
+button:focus-visible, input:focus-visible, select:focus-visible, summary:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+.msg { min-height: 1.3em; font-size: 13px; color: var(--bad); }
+
+.group { display: grid; gap: 6px; }
+.group + .group { margin-top: 4px; }
+.gh { display: flex; gap: 8px; align-items: baseline; font-size: 13px; font-weight: 700; color: var(--muted); }
+.gh.bad { color: var(--bad); }
+.gh.warn { color: var(--warn); }
+.gh .n { font-weight: 400; font-variant-numeric: tabular-nums; }
+.items { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; }
+.item { display: flex; gap: 6px; align-items: flex-start; padding: 6px 10px 6px 4px; border-bottom: 1px solid var(--line); }
+.item:last-child { border-bottom: 0; }
+.check { flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; cursor: pointer; padding: 0; }
+.check i {
+  width: 22px;
+  height: 22px;
+  border: 2px solid var(--muted);
+  border-radius: 5px;
+  display: grid;
+  place-items: center;
+  font-style: normal;
+  font-size: 15px;
+  line-height: 1;
+  color: var(--accent-ink);
+}
+.check[aria-checked="true"] i { background: var(--good); border-color: var(--good); }
+.check.missed i { background: var(--bad); border-color: var(--bad); }
+.hstat { font-size: 13px; color: var(--muted); padding: 0 14px 10px; font-variant-numeric: tabular-nums; }
+.body { flex: 1 1 auto; min-width: 0; padding-top: 7px; }
+.title { overflow-wrap: anywhere; }
+.done .title { color: var(--muted); text-decoration: line-through; }
+.star { color: var(--warn); font-weight: 700; }
+.tc { font-weight: 700; }
+.sub > .link { justify-self: start; }
+.older { font-size: 13px; color: var(--muted); }
+.older .acts { align-items: center; margin: 0; }
+.done .tc { font-weight: 400; }
+#settings { display: grid; gap: 20px; min-width: 0; }
+#settings[hidden] { display: none; }
+.meta { display: flex; flex-wrap: wrap; gap: 2px 10px; font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.meta .kind { color: var(--ink); }
+.meta .bad { color: var(--bad); font-weight: 700; }
+.meta .warn { color: var(--warn); font-weight: 700; }
+.acts { display: flex; flex-wrap: wrap; gap: 0 10px; margin-top: 2px; }
+.tag { border: 1px solid var(--line); border-radius: 4px; padding: 0 5px; font-size: 11px; }
+
+.toast { position: fixed; z-index: 20; left: max(16px, env(safe-area-inset-left, 0px)); right: max(16px, env(safe-area-inset-right, 0px)); bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-width: 608px; margin: 0 auto; display: flex; gap: 8px 12px; align-items: center; justify-content: space-between; background: var(--ink); color: var(--bg); border-radius: 12px; padding: 10px 10px 10px 16px; font-size: 14px; box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25); }
+.toast span { min-width: 0; overflow-wrap: anywhere; }
+.toast .undo { flex: none; min-height: 40px; padding: 0 16px; border-radius: 8px; border: 0; background: var(--bg); color: var(--ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.empty { background: var(--surface); border: 1px dashed var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 10px; justify-items: start; color: var(--muted); }
+.none { color: var(--muted); padding: 4px 0; }
+
+.sec { display: grid; gap: 8px; }
+.sec > * { min-width: 0; }
+.sec > h2 { font-size: 14px; font-weight: 700; }
+.course { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px; padding: 8px 12px; border-bottom: 1px solid var(--line); }
+.course:last-child { border-bottom: 0; }
+.course .cn { flex: 1 1 160px; min-width: 0; overflow-wrap: anywhere; font-weight: 700; }
+.course .co { color: var(--muted); font-size: 13px; font-variant-numeric: tabular-nums; }
+.course .cc { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 0 12px; align-items: center; }
+.tt { flex-basis: 100%; display: grid; grid-template-columns: 2.6em repeat(6, minmax(0, 1fr)); gap: 4px; padding: 6px 0 8px; }
+.tt .th { text-align: center; font-size: 12px; color: var(--muted); align-self: center; }
+.tt .cell { min-height: 40px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--accent-ink); font: inherit; cursor: pointer; padding: 0; }
+.tt .cell.on { background: var(--accent); border-color: var(--accent); }
+.ttwrap { flex-basis: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 8px; padding-bottom: 8px; }
+.ttwrap > * { min-width: 0; }
+.ttwrap .tt { padding-bottom: 0; }
+.odrow { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
+.odrow .odl { grid-column: 1 / -1; font-size: 12.5px; color: var(--muted); }
+.odrow .cell { min-height: 40px; border: 1px solid var(--line); border-radius: 5px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; padding: 0; }
+.odrow .cell.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.cform { display: flex; flex-wrap: wrap; gap: 8px; }
+.cform input { flex: 1 1 200px; width: 0; }
+.foot { font-size: 12.5px; color: var(--muted); }
+
+.ci { background: var(--surface); border: 1px solid var(--line); border-radius: 6px; padding: 16px; display: grid; gap: 18px; }
+.ci h2 { font-size: 18px; font-weight: 700; }
+.ci h2:focus { outline: none; }
+.ci .step { font-size: 13px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.qg { display: grid; gap: 8px; }
+.qt { font-weight: 700; }
+.qs { font-size: 12.5px; font-weight: 700; color: var(--muted); margin-top: 2px; }
+.sub { display: grid; gap: 8px; padding: 10px 12px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 0 6px 6px 0; }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { min-height: 44px; padding: 0 16px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.opt.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.ci input[type="text"] { width: 100%; }
+.nav { display: flex; flex-wrap: wrap; gap: 8px; }
+.sum li { padding: 2px 0; }
+.card { display: grid; gap: 14px; min-height: 220px; align-content: start; }
+.card-q { font-size: 21px; font-weight: 700; line-height: 1.4; }
+.card-q:focus { outline: none; }
+.card-opts { display: grid; grid-template-columns: 1fr; gap: 8px; }
+.card-opts .opt { min-height: 52px; font-size: 16px; text-align: left; padding: 0 18px; font-weight: 700; border-color: color-mix(in srgb, var(--ink) 28%, var(--line)); }
+.card-opts .opt.on { border-color: var(--accent); }
+.cihead { display: grid; gap: 2px; }
+.cihead h2 { overflow-wrap: anywhere; }
+.altrow { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+.altrow .btn { font-weight: 400; padding: 0 6px; color: var(--muted); }
+.exbar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 8px 8px 8px 14px; border-radius: 10px; background: var(--accent-soft); font-size: 14px; }
+.exbar[hidden] { display: none; }
+.lsbar { display: grid; gap: 4px; padding: 12px 14px; border-radius: 12px; border: 1.5px solid var(--warn); background: color-mix(in srgb, var(--warn) 10%, var(--surface)); font-size: 14px; line-height: 1.6; }
+.lsbar b { color: var(--warn); }
+.lsbar .link { justify-self: start; }
+.lsbar[hidden] { display: none; }
+.lsbar .row { gap: 4px 12px; }
+.acct { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 12px; font-size: 13px; color: var(--muted); }
+.acct b { color: var(--ink); font-weight: 700; overflow-wrap: anywhere; }
+.btn.small.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+#xtext { width: 100%; min-height: 88px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; font-size: 13px; padding: 8px 10px; }
+.xfile { display: inline-flex; align-items: center; cursor: pointer; }
+#xconfirm { padding: 8px 10px; border-radius: 8px; background: var(--accent-soft); font-size: 14px; }
+.empty.first { background: var(--surface); border-style: solid; color: var(--ink); }
+.empty.first .qt { font-size: 17px; }
+.empty.first p { color: var(--muted); }
+.empty.first .qt { color: var(--ink); }
+.msg.vh { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); min-height: 0; }
+.card-opts .opt.rec { border: 1.5px solid var(--accent); color: var(--accent); font-weight: 700; }
+.card-alt { display: grid; gap: 6px; padding-top: 12px; border-top: 1px solid var(--line); margin-top: 6px; }
+.card-link { justify-self: start; }
+.ocrbox { display: grid; gap: 10px; padding: 14px; border: 1px solid var(--accent); border-radius: 12px; background: var(--surface); }
+.ocrhead { display: grid; gap: 10px; }
+.ocrhead .btn { justify-self: start; }
+.ocrrows { display: grid; gap: 8px; }
+.ocrbox { min-width: 0; }
+.ttc.cand { background: var(--accent-soft); border: 1.5px dashed var(--accent); }
+.candedit { display: grid; gap: 8px; padding: 10px; border-radius: 10px; background: var(--bg); }
+.candedit input[type="text"] { width: 100%; }
+.candedit .row input[type="text"] { flex: 1 1 100px; width: 0; }
+.candchip { border: 1px dashed var(--accent); padding: 6px 12px !important; font: inherit; font-size: 13px; cursor: pointer; }
+.ocrrow { display: grid; gap: 6px; padding: 8px 0; border-top: 1px solid var(--line); }
+.ocrtop { display: flex; gap: 8px; align-items: center; }
+.ocrtop input[type="checkbox"] { width: 20px; height: 20px; accent-color: var(--accent); flex: none; margin: 0; }
+.ocrtop input[type="text"] { flex: 1 1 auto; min-width: 0; }
+.ocrbot { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; padding-left: 28px; }
+.ocrbot input[type="text"] { flex: 1 1 100px; min-width: 0; }
+.shrow, .steprow { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.swnote { font-size: 13px; font-weight: 700; color: var(--warn); }
+.swopts { display: flex; flex-wrap: wrap; gap: 6px; }
+.swopts .opt { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; }
+.swopts .opt.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.swlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 2px; font-size: 14px; }
+.swlist li { display: flex; justify-content: space-between; align-items: center; }
+.phases { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 4px; }
+.phases li { text-align: center; font-size: 12px; color: var(--muted); padding: 6px 0 4px; border-top: 3px solid var(--line); }
+.phases li.past { border-top-color: var(--muted); }
+.phases li.on { border-top-color: var(--accent); color: var(--accent); font-weight: 700; }
+.ichev { flex: none; color: var(--muted); font-size: 18px; line-height: 1; transition: transform 150ms ease; }
+.ichev.open { transform: rotate(90deg); }
+.pastlink { display: flex; justify-content: space-between; align-items: center; min-height: 44px; padding: 0 14px; border-radius: 12px; border: 1px solid var(--line); background: var(--surface); color: var(--warn); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; text-align: left; }
+.edh { flex-basis: 100%; font-size: 12px; font-weight: 700; color: var(--muted); margin-top: 6px; }
+.viewbtn { display: inline-flex; align-items: center; gap: 6px; }
+.quicks { display: grid; gap: 8px; }
+.quickbtn { display: grid; gap: 2px; text-align: left; min-height: 56px; padding: 10px 16px; border-radius: 10px; border: 1.5px solid var(--accent); background: var(--accent-soft); color: var(--ink); font: inherit; cursor: pointer; }
+.quickbtn b { color: var(--accent); font-size: 15px; }
+.quickbtn span { font-size: 12.5px; color: var(--muted); }
+.quickbtn .qhint { font-size: 11.5px; color: var(--accent); }
+.wkf { flex-basis: 100%; display: grid; gap: 6px; }
+.wkf .opt { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 6px; background: var(--surface); color: var(--ink); font: inherit; cursor: pointer; }
+.wkf .opt.on { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); font-weight: 700; }
+.wkf input[type="text"] { width: 100%; }
+.card-time, .card-date { display: grid; gap: 4px; }
+.card-foot { align-items: center; }
+.sumlist { display: grid; border: 1px solid var(--line); border-radius: 6px; }
+.sumline { display: grid; grid-template-columns: 4.5em 1fr auto; gap: 8px; align-items: center; text-align: left; background: none; border: 0; border-bottom: 1px solid var(--line); padding: 12px; min-height: 52px; font: inherit; color: var(--ink); cursor: pointer; }
+.sumline:last-child { border-bottom: 0; }
+.sl-k { font-weight: 700; color: var(--muted); font-size: 13px; }
+.sl-v { min-width: 0; overflow-wrap: anywhere; }
+.sl-e { font-size: 13px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; }
+.dots { display: flex; gap: 6px; justify-content: center; }
+.dots span { width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+.dots span.past { background: var(--muted); }
+.dots span.on { background: var(--accent); width: 18px; border-radius: 4px; }
+.btn[disabled] { opacity: 0.45; cursor: default; }
+
+/* ---- past check-ins ---- */
+.olist { list-style: none; margin: 0; padding: 0 0 4px; border-top: 1px solid var(--line); }
+.odate { font-size: 12px; font-weight: 700; color: var(--muted); padding: 10px 14px 2px; }
+.ob { width: 100%; display: flex; align-items: center; gap: 10px; min-height: 48px; padding: 6px 14px; background: none; border: 0; font: inherit; color: var(--ink); text-align: left; cursor: pointer; }
+.ob .on { flex: 1 1 auto; min-width: 0; overflow-wrap: anywhere; }
+.ob .os { font-size: 12px; color: var(--muted); white-space: nowrap; }
+.ob .os.warn { color: var(--warn); font-weight: 700; }
+.ob .os.good { color: var(--good); }
+.ob .oe { font-size: 13px; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; }
+.oacts { padding: 4px 14px 12px; }
+/* ---- timetable table ---- */
+.ttable-wrap { overflow-x: auto; }
+.ttable { display: grid; gap: 4px; min-width: 320px; }
+.tth { text-align: center; font-size: 12px; color: var(--muted); padding: 4px 0; border-radius: 6px; }
+.tth.now { background: var(--ink); color: var(--bg); font-weight: 700; }
+.ttp { display: grid; justify-items: center; align-content: center; line-height: 1.2; color: var(--muted); }
+.ttp b { font-size: 13px; }
+.ttp small { font-size: 9px; }
+.ttc { min-height: 58px; border-radius: 8px; border: 0; padding: 5px 4px; font: inherit; text-align: left; display: flex; flex-direction: column; justify-content: space-between; gap: 2px; min-width: 0; background: color-mix(in srgb, var(--cc) 18%, var(--surface)); color: var(--ink); cursor: pointer; }
+.ttc.empty { background: var(--surface); border: 1px dashed var(--line); align-items: center; justify-content: center; }
+.ttc.empty.picking { border: 2px solid var(--accent); }
+.ttplus { color: var(--muted); font-size: 16px; }
+.sheet { display: grid; gap: 8px; margin-top: 10px; padding: 14px; border: 1px solid var(--accent); border-radius: 12px; background: var(--surface); }
+.sheetopts { display: flex; flex-wrap: wrap; gap: 6px; }
+.sheet select { width: 100%; }
+.sheetopts .opt { min-height: 40px; padding: 0 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); color: var(--ink); font: inherit; font-size: 14px; cursor: pointer; display: inline-flex; align-items: center; }
+.slots { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.slotchip { display: inline-flex; align-items: center; gap: 2px; padding-left: 10px; border-radius: 999px; background: var(--accent-soft); color: var(--ink); font-size: 13px; font-weight: 700; }
+.slotx { width: 32px; height: 32px; border: 0; background: none; color: var(--muted); font: inherit; font-size: 15px; cursor: pointer; border-radius: 50%; }
+.ttn { font-size: 12px; font-weight: 700; line-height: 1.25; overflow-wrap: anywhere; }
+.ttr { font-size: 10px; color: var(--muted); overflow-wrap: anywhere; }
+.roomf { flex-basis: 100%; min-width: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 4px; }
+.askl { display: inline-flex; align-items: center; gap: 6px; min-height: 32px; font-size: 13px; color: var(--ink); cursor: pointer; }
+.askl input { width: 18px; height: 18px; accent-color: var(--accent); margin: 0; }
+.roomf .row { flex-wrap: wrap; }
+.roomf input { flex: 1 1 140px; width: 0; min-width: 0; }
+.roomf .saved { font-size: 12px; color: var(--good); white-space: nowrap; }
+.roomf .btn { flex: none; white-space: nowrap; }
+.odrow .cell { min-height: 36px !important; }
+.tcell { font: inherit; color: inherit; text-align: left; }
+.tcell .tk { font-size: 11px; font-weight: 700; color: var(--ink); }
+.tcell .tr { font-size: 11px; color: var(--muted); overflow-wrap: anywhere; }
+/* ---- A: today-first top ---- */
+.head { align-items: flex-end; }
+.head .stats { font-size: 13px; letter-spacing: 0.02em; }
+.head h1 { font-size: 26px; line-height: 1.3; }
+.hero { border-radius: 18px; padding: 20px; display: grid; gap: 12px; background: var(--hero-bg); color: var(--hero-ink); }
+.hero.calm { background: var(--surface); color: var(--ink); border: 1px solid var(--line); }
+.hero .hl { font-size: 12px; font-weight: 700; letter-spacing: 0.08em; opacity: 0.85; }
+.hero .hb { font-size: 24px; font-weight: 700; line-height: 1.35; overflow-wrap: anywhere; }
+.hero.calm .hb { font-size: 19px; }
+.hero .hs { font-size: 14px; opacity: 0.9; }
+.hero .hrow { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; }
+.hero .hbtn { min-height: 46px; padding: 0 22px; border-radius: 12px; border: 0; background: var(--hero-ink); color: var(--hero-bg); font: inherit; font-size: 15px; font-weight: 700; cursor: pointer; }
+.hero.calm .hbtn { background: var(--accent); color: var(--accent-ink); }
+.hero .hlink { background: none; border: 0; padding: 8px 0; font: inherit; font-size: 13px; color: inherit; opacity: 0.85; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.hurgent { display: flex; align-items: center; gap: 8px; width: 100%; text-align: left; min-height: 40px; padding: 8px 12px; border: 0; border-radius: 10px; background: color-mix(in srgb, var(--hero-ink) 16%, transparent); color: var(--hero-ink); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; }
+.hurgent b { flex: none; width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--hero-ink); color: var(--hero-bg); font-size: 13px; }
+.hero .hbtn:focus-visible, .hero .hlink:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+.sh { font-size: 13px; font-weight: 700; color: var(--muted); }
+.today { display: grid; gap: 10px; }
+.tgrid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+@media (min-width: 640px) { .tgrid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.tcell .thead { display: flex; justify-content: space-between; align-items: center; gap: 6px; }
+.tcell .tn { font-size: 15px !important; }
+.tcell { background: var(--surface); border: 1px solid transparent; border-radius: 12px; padding: 10px 8px; display: flex; flex-direction: column; gap: 4px; min-height: 86px; min-width: 0; }
+.tcell.next { border-color: var(--ink); }
+.tcell .tp { font-size: 11px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tcell .tn { font-size: 13px; font-weight: 700; line-height: 1.3; overflow-wrap: anywhere; display: flex; gap: 5px; align-items: baseline; }
+.tcell .tn i { flex: none; width: 8px; height: 8px; border-radius: 50%; transform: translateY(-1px); }
+.tcell .ts { flex: none; font-size: 11px; color: var(--muted); padding: 1px 8px; border-radius: 999px; background: var(--bg); white-space: nowrap; }
+.tcell .ts.warn { color: var(--warn); font-weight: 700; background: color-mix(in srgb, var(--warn) 14%, var(--surface)); }
+.tcell .ts.good { color: var(--good); font-weight: 700; background: color-mix(in srgb, var(--good) 14%, var(--surface)); }
+.tnone { font-size: 13px; color: var(--muted); }
+/* item rows */
+.items { border-radius: 14px; border-color: transparent; }
+.item { padding: 4px 12px 4px 4px; gap: 4px; align-items: center; border-bottom-color: var(--bg); }
+.item .ring { flex: none; width: 44px; height: 44px; display: grid; place-items: center; background: none; border: 0; padding: 0; cursor: pointer; }
+.item .ring i { width: 24px; height: 24px; border-radius: 6px; border: 2px solid var(--muted); display: grid; place-items: center; font-style: normal; font-size: 15px; line-height: 1; color: var(--surface); font-weight: 700; }
+.item .ring[aria-checked="true"] i { background: var(--good); border-color: var(--good); }
+.cdot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; margin-right: 6px; transform: translateY(-1px); }
+.item .ring.missed i { background: var(--bad); border-color: var(--bad); }
+.item .ib { flex: 1 1 auto; min-width: 0; display: flex; align-items: center; gap: 10px; background: none; border: 0; padding: 10px 0; font: inherit; color: inherit; text-align: left; cursor: pointer; }
+.item .ib .ibt { flex: 1 1 auto; min-width: 0; display: grid; gap: 1px; }
+.item .ib .ic { font-size: 12px; color: var(--muted); overflow-wrap: anywhere; }
+.item .ib .ititle { font-size: 15px; font-weight: 500; overflow-wrap: anywhere; }
+.item.done .ititle { color: var(--muted); text-decoration: line-through; }
+.item .ib .idue { flex: none; font-size: 13px; color: var(--muted); text-align: right; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.item .ib .idue.warn { color: var(--warn); font-weight: 700; }
+.item .ib .idue.bad { color: var(--bad); font-weight: 700; }
+.item .iacts { flex-basis: 100%; display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 0 0 10px 48px; }
+.item { flex-wrap: wrap; }
+.addbtn > summary { border: 1.5px dashed var(--line); border-radius: 12px; justify-content: center !important; color: var(--muted); }
+details.panel.addbtn { background: transparent; border: 0; }
+details.panel.addbtn[open] { background: var(--surface); border: 1px solid var(--line); }
+details.panel.addbtn[open] > summary { border: 0; justify-content: space-between !important; color: var(--ink); }
+details.panel.addbtn > summary::after { display: none; }
+details.panel.addbtn[open] > summary::after { display: block; }
+
+/* ================= 別案のレイヤー ================= */
+body { font-size: var(--fs-b); line-height: 1.7; padding-block: 16px 56px; }
+.wrap { gap: 18px; }
+/* 日付の帯 */
+.head { align-items: center; padding-bottom: 12px; border-bottom: 1px solid var(--line); }
+.head .stats { font-size: 13px; letter-spacing: 0.02em; }
+.head h1 { font-size: 20px; line-height: 1.3; }
+.btn { border-radius: 10px; }
+.btn.small { border-radius: 10px; background: var(--surface); }
+/* 次にやること */
+.hero { border-radius: 16px; padding: 18px 18px 16px; gap: 10px; }
+.hero .hl { font-size: 12px; letter-spacing: 0.12em; }
+.hero .hb { font-size: 22px; }
+.hero .hs { font-size: 14px; }
+.hero .hbtn { border-radius: 10px; min-height: 48px; }
+.hero.calm { background: var(--surface); border-color: var(--line); }
+/* 今日の講義：時刻を等幅で左にそろえる */
+.sh { font-size: 12px; letter-spacing: 0.1em; }
+.tcell { border-radius: 10px; border: 1px solid var(--line); background: var(--surface); }
+.tcell.next { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.tcell .tp { font-family: var(--f-num); font-size: 11.5px; }
+.tcell .tn { font-size: 15px !important; }
+/* 一覧 */
+.items { border-radius: 12px; border: 1px solid var(--line); }
+.item { border-bottom-color: var(--line); }
+.item .ib .ititle { font-size: 16px; font-weight: 400; }
+.item .ib { flex: 1 1 0; }
+.item .ib .idue { font-size: 13px; }
+details.panel { border-radius: 12px; }
+/* 講義後チェック：上は小さく、質問と選択肢が主役 */
+.ci { border-radius: 16px; padding: 18px; gap: 16px; background: var(--surface); }
+.cihead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; }
+.cihead h2 { font-size: var(--fs-b); font-weight: 700; color: var(--ink); }
+.ci .step { font-family: var(--f-num); font-size: 12px; }
+.phases { gap: 6px; }
+.phases li { font-size: 11.5px; padding: 6px 0 0; border-top-width: 4px; border-radius: 2px; }
+.card { gap: 16px; min-height: 0; }
+.card-q { font-size: var(--fs-q); line-height: 1.4; text-wrap: balance; }
+.card-opts { gap: 10px; }
+.card-opts .opt { min-height: 58px; font-size: var(--fs-l); border-radius: 12px; border: 1.5px solid var(--line-strong); background: var(--surface); padding: 0 20px; }
+.card-opts .opt:hover { border-color: var(--accent); }
+.card-opts .opt.on { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+.card-opts .opt.rec { border: 2px solid var(--accent); color: var(--accent); }
+.card-alt { border-top: 0; padding-top: 4px; margin-top: 0; }
+.card-alt .nav { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+.card-alt .nav > :first-child { grid-column: 1 / -1; }
+.card-alt .btn { min-height: 52px; padding: 4px 6px; border-radius: 12px; background: var(--surface-2); border: 1px solid var(--line); color: var(--ink); font-size: 14px; font-weight: 700; line-height: 1.3; }
+.card-foot { border-top: 1px solid var(--line); padding-top: 12px; }
+.quickbtn { border-radius: 12px; }
+.sumlist { border-radius: 12px; }
+/* 時間割 */
+.ttc { border-radius: 10px; }
+.tth.now { background: var(--accent); color: var(--accent-ink); }
+/* 表示の切り替え */
+.themesw { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; font-size: var(--fs-s); color: var(--muted); }
+.seg { display: inline-grid; grid-auto-flow: column; gap: 2px; padding: 3px; border-radius: 10px; background: var(--surface-2); border: 1px solid var(--line); }
+.seg button { min-height: 36px; padding: 0 14px; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font: inherit; font-size: 13px; cursor: pointer; }
+.seg button[aria-pressed="true"] { background: var(--surface); color: var(--ink); font-weight: 700; box-shadow: 0 1px 2px color-mix(in srgb, var(--ink) 18%, transparent); }
+/* 今日の講義は少し小さめ */
+.tcell .tn { font-size: 14px !important; }
+.tcell .tr, .tcell .tk, .tcell .tp { font-size: 11px; }
+.tcell .ts { font-size: 10.5px; }
+.tcell { min-height: 0; padding: 9px 10px; }
+</style>
+
+<main class="wrap">
+  <header class="head">
+    <div>
+      <p class="stats" id="stats" aria-live="polite"></p>
+      <h1 id="htitle">今日</h1>
+    </div>
+    <div class="row">
+      <button type="button" class="btn small" id="ci-open" hidden>講義後チェック</button>
+      <button type="button" class="btn small viewbtn" id="view-btn" hidden><svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4.5" width="18" height="16" rx="2.5"></rect><path d="M3 9.5h18M8 3v3M16 3v3"></path></svg><span id="view-label">時間割</span></button>
+    </div>
+  </header>
+
+  <div class="lsbar" id="lsbar" hidden>
+    <p id="lstext"><b>ログインしていないので、入力はこのブラウザにだけ保存されます。</b>Googleでログインすると、どの端末でも同じ内容が出て、ブラウザを閉じても消えません。</p>
+    <div class="row"><button type="button" class="btn small primary" id="lsin">Googleでログイン</button><button type="button" class="link" id="lsoff">あとで</button></div>
+  </div>
+  <div class="exbar" id="tkbar" hidden>
+    <span id="tktext"></span>
+    <span class="row"><button type="button" class="btn small primary" id="tkyes">引き継ぐ</button><button type="button" class="link" id="tkno">引き継がない</button></span>
+  </div>
+  <div class="exbar" id="exbar" hidden>
+    <span>例のデータが入っています。</span>
+    <button type="button" class="btn small" id="exdel">例を削除</button>
+  </div>
+
+  <section class="hero" id="banner" hidden aria-label="次にやること"></section>
+
+  <section class="ci" id="checkin" hidden aria-label="講義後チェック"></section>
+
+  <div id="main">
+
+    <div id="toast" hidden></div>
+
+    <section class="today" id="today" aria-labelledby="today-h" hidden></section>
+
+    <section id="open" aria-label="まだ終わっていないもの"></section>
+
+    <details class="panel addbtn" id="adddet">
+      <summary id="addsum">＋ 課題などを追加</summary>
+      <form class="form" id="form" autocomplete="off">
+        <label class="field">
+          <span>講義</span>
+          <select id="f-course"></select>
+        </label>
+        <div class="field" role="radiogroup" aria-label="種類">
+          <span class="legend">種類</span>
+          <div class="kinds" id="kinds"></div>
+        </div>
+        <label class="field">
+          <span>内容</span>
+          <input type="text" id="f-title" maxlength="100" placeholder="例：第3回レポート（グループ課題は担当を確認）">
+        </label>
+        <div class="field">
+          <span class="legend">期限（なければ空欄）</span>
+          <div class="row">
+            <input type="date" id="f-due" aria-label="期限">
+            <div class="quick" id="quick"></div>
+          </div>
+        </div>
+        <button type="button" class="link" id="f-topen" style="justify-self:start">＋ 時刻も指定する</button>
+        <div class="field" id="f-tfield" hidden>
+          <span class="legend">締切の時刻</span>
+          <div class="row">
+            <input type="time" id="f-time" aria-label="締切の時刻">
+            <button type="button" class="btn small" id="f-t2359">23:59</button>
+            <button type="button" class="link" id="f-tclear">時刻を消す</button>
+          </div>
+        </div>
+        <div class="row">
+          <button type="submit" class="btn primary" id="f-submit">追加</button>
+          <button type="button" class="btn" id="f-cancel" hidden>編集をやめる</button>
+        </div>
+        <p class="msg" id="msg" role="status" aria-live="polite"></p>
+      </form>
+    </details>
+
+    <details class="panel" id="donesec" hidden>
+      <summary id="donesum"></summary>
+      <div id="done"></div>
+    </details>
+
+    <details class="panel" id="histsec" hidden>
+      <summary id="histsum"></summary>
+      <div id="hist"></div>
+    </details>
+
+    <details class="panel" id="older" hidden>
+      <summary id="oldersum"></summary>
+      <div id="olderbody"></div>
+    </details>
+  </div>
+
+  <div id="settings" hidden>
+    <section class="sec" aria-labelledby="courses-h">
+      <div class="empty first" id="empty" hidden>
+        <p class="qt">最初に、時間割を登録します</p>
+        <p id="emptytxt">下の表の「＋」を押して、講義を入れます。動きを見たいだけなら、例を入れて試せます（あとで削除できます）。</p>
+        <div class="nav" id="emptyacts"><button type="button" class="btn" id="sample">例を入れて試す</button></div>
+      </div>
+      <h2 id="courses-h" class="sh">週の表（「＋」で講義を入れる・講義を押すと設定）</h2>
+      <div class="ocrbox" id="ocr" hidden></div>
+      <div class="ttable-wrap" id="ttable"></div>
+      <h2 class="sh">講義の一覧</h2>
+      <p class="foot">曜日と時限を入れた講義は、その講義が終わった後に「講義後チェック」で聞かれます。</p>
+      <ul class="items" id="clist" hidden></ul>
+      <form class="cform" id="cform" autocomplete="off">
+        <input type="text" id="c-name" maxlength="40" aria-label="講義名" placeholder="講義名を入力">
+        <button type="submit" class="btn">講義を追加</button>
+      </form>
+      <p class="msg" id="cmsg" role="status" aria-live="polite"></p>
+      <details class="panel" id="xfer">
+        <summary><span class="ptitle"><b>データの書き出し・読み込み</b><small>別のページや端末に、講義と課題をまとめて移します</small></span></summary>
+        <div class="form">
+          <button type="button" class="btn" id="xout">書き出す（文字をコピー）</button>
+          <textarea id="xtext" rows="4" aria-label="書き出した文字・読み込む文字" placeholder="読み込むときは、書き出した文字をここに貼り付けます"></textarea>
+          <div class="row">
+            <button type="button" class="btn" id="xin">貼り付けた文字を読み込む</button>
+            <label class="btn small xfile">ファイルから読み込む<input type="file" id="xfile" accept=".json,.txt,application/json,text/plain" hidden></label>
+          </div>
+          <div class="row" id="xconfirm" hidden>
+            <span id="xcmsg"></span>
+            <button type="button" class="btn small primary" id="xyes">置き換える</button>
+            <button type="button" class="link" id="xno">やめる</button>
+          </div>
+          <p class="msg" id="xmsg" role="status" aria-live="polite"></p>
+        </div>
+      </details>
+    </section>
+  </div>
+
+  <div class="themesw" role="group" aria-label="表示">
+    <span>表示</span>
+    <div class="seg" id="themesw">
+      <button type="button" data-v="system" aria-pressed="true">システム</button>
+      <button type="button" data-v="light" aria-pressed="false">ライト</button>
+      <button type="button" data-v="dark" aria-pressed="false">ダーク</button>
+    </div>
+  </div>
+  <div class="acct" id="acct" hidden></div>
+  <p class="foot" id="storage">保存先を確認中…</p>
+</main>
+
+<script>
+(function () {
+  var KEY = 'koma-ui-theme';
+  function apply(v) {
+    if (v === 'light' || v === 'dark') document.documentElement.setAttribute('data-ui', v);
+    else document.documentElement.removeAttribute('data-ui');
+    var box = document.getElementById('themesw');
+    if (box) [].forEach.call(box.querySelectorAll('button'), function (b) { b.setAttribute('aria-pressed', b.getAttribute('data-v') === (v || 'system') ? 'true' : 'false'); });
+  }
+  var cur = 'system';
+  try { cur = localStorage.getItem(KEY) || 'system'; } catch (e) { cur = 'system'; }
+  apply(cur);
+  document.getElementById('themesw').addEventListener('click', function (e) {
+    var b = e.target.closest('button[data-v]');
+    if (!b) return;
+    var v = b.getAttribute('data-v');
+    try { localStorage.setItem(KEY, v); } catch (err) { /* ignore */ }
+    apply(v);
+  });
+})();
+</script>
+<script>
+(function () {
+  'use strict';
+
+  var LS_KEY = 'koma-tasks-v1';
+  var KINDS = ['課題', '小テスト', '復習', 'その他'];
+  var TYPES = ['レポート', '小テスト', '提出物', 'その他'];
+  var DAYS = ['日', '月', '火', '水', '木', '金', '土'];
+  var BUCKETS = ['期限超過', '今日', '3日以内', '7日以内', 'それ以降', '期限なし'];
+  var MAX_ITEMS = 400;
+  // Period end times in minutes from midnight (1限 10:20 ... 6限 19:30).
+  var PERIOD_END = [0, 620, 720, 870, 970, 1070, 1170];
+  // Period start times (1限 8:50 ... 6限 18:00).
+  var PERIOD_START = [0, 530, 630, 780, 880, 980, 1080];
+
+  var state = { v: 3, courses: [], items: [], cc: {} };
+  var ui = {
+    kind: '課題', course: '', editing: null, confirmItem: null, confirmCourse: null,
+    confirmClear: false, toast: null, openedOnce: false, tt: null, ci: null, renaming: null,
+    wantCheck: false, view: 'main'
+  };
+
+  // ---------- helpers ----------
+  function $(id) { return document.getElementById(id); }
+  function pad(n) { return n < 10 ? '0' + n : '' + n; }
+  function ymd(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
+  function parse(s) { var p = s.split('-'); return new Date(+p[0], +p[1] - 1, +p[2]); }
+  function addDays(d, n) { return new Date(d.getFullYear(), d.getMonth(), d.getDate() + n); }
+  function diffDays(a, b) {
+    return Math.round((Date.UTC(a.getFullYear(), a.getMonth(), a.getDate()) - Date.UTC(b.getFullYear(), b.getMonth(), b.getDate())) / 86400000);
+  }
+  function fmt(d) { return (d.getMonth() + 1) + '/' + d.getDate() + '（' + DAYS[d.getDay()] + '）'; }
+  function newId() { return 'i' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6); }
+  function todayDate() { var t = new Date(); return new Date(t.getFullYear(), t.getMonth(), t.getDate()); }
+  function h(tag, attrs, kids) {
+    var e = document.createElement(tag);
+    if (attrs) {
+      Object.keys(attrs).forEach(function (k) {
+        var v = attrs[k];
+        if (k === 'class') e.className = v;
+        else if (k === 'text') e.textContent = v;
+        else if (k.slice(0, 2) === 'on') e.addEventListener(k.slice(2), v);
+        else e.setAttribute(k, v);
+      });
+    }
+    (kids || []).forEach(function (c) {
+      if (c == null) return;
+      e.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    });
+    return e;
+  }
+  function courseById(id) {
+    for (var i = 0; i < state.courses.length; i++) if (state.courses[i].id === id) return state.courses[i];
+    return null;
+  }
+  function courseName(id) { var c = courseById(id); return c ? c.name : ''; }
+  function findItem(id) {
+    for (var i = 0; i < state.items.length; i++) if (state.items[i].id === id) return state.items[i];
+    return null;
+  }
+
+  // ---------- timetable helpers ----------
+  // A slot is weekday * 10 + period (weekday 0=Sun..6=Sat, period 1..9).
+  function slotsOf(c) { return c.s || []; }
+  // c.od: weekday (0=Sun..6) to ask about a course with no fixed period (on-demand etc).
+  function hasOd(c) { return typeof c.od === 'number'; }
+  function hasDay(c, wd) { return c.od === wd || slotsOf(c).some(function (v) { return Math.floor(v / 10) === wd; }); }
+  function hasSchedule(c) { return slotsOf(c).length > 0 || hasOd(c); }
+  function periodOf(c, wd) {
+    var best = 99;
+    slotsOf(c).forEach(function (v) { if (Math.floor(v / 10) === wd && v % 10 < best) best = v % 10; });
+    return best === 99 ? 0 : best;
+  }
+  function nextClassDate(c, today) {
+    for (var n = 1; n <= 14; n++) {
+      var d = addDays(today, n);
+      var dw = wdOf(d);
+      if (dw >= 0 && hasDay(c, dw)) return d;
+    }
+    return null;
+  }
+  // Courses in timetable order (Mon 1限 first, Sun last); courses with no slot keep their added order at the end.
+  function slotKey(v) { return (Math.floor(v / 10) || 7) * 10 + v % 10; }
+  function courseKey(c) {
+    var s = slotsOf(c).map(slotKey);
+    if (hasOd(c)) s.push((c.od || 7) * 10 + 9);
+    if (!s.length) return 999;
+    return Math.min.apply(null, s);
+  }
+  function sortedCourses() {
+    return state.courses.map(function (c, i) { return { c: c, i: i, k: courseKey(c) }; })
+      .sort(function (a, b) { return (a.k - b.k) || (a.i - b.i); })
+      .map(function (x) { return x.c; });
+  }
+  function slotLabel(c) {
+    var list = slotsOf(c).slice().sort(function (a, b) {
+      var wa = Math.floor(a / 10) || 7, wb = Math.floor(b / 10) || 7;
+      return (wa - wb) || (a % 10 - b % 10);
+    });
+    var parts = list.map(function (v) { return DAYS[Math.floor(v / 10)] + (v % 10); });
+    if (hasOd(c)) parts.push('時限なし（' + DAYS[c.od] + 'に聞く）');
+    return parts.join('・');
+  }
+  // Day changes (振替・休み): state.sw maps a date to the weekday whose timetable runs that day, or -1 for no classes.
+  function wdOf(d) {
+    var v = state.sw && state.sw[ymd(d)];
+    return typeof v === 'number' ? v : d.getDay();
+  }
+  function todaysClasses(today) {
+    var wd = wdOf(today);
+    if (wd < 0) return [];
+    return state.courses.filter(function (c) { return c.q !== 0 && hasDay(c, wd); })
+      .sort(function (a, b) { return (periodOf(a, wd) || 9) - (periodOf(b, wd) || 9); });
+  }
+  function lastPeriodOf(c, wd) {
+    var best = 0;
+    slotsOf(c).forEach(function (v) { if (Math.floor(v / 10) === wd && v % 10 > best) best = v % 10; });
+    return best;
+  }
+  function hasEnded(c, today) {
+    var now = new Date();
+    if (ymd(now) !== ymd(today)) return true;
+    var wd = wdOf(today);
+    var p = lastPeriodOf(c, wd);
+    if (!p) {
+      // no period that day (on-demand): asked with the day's last class, or from noon if there is none
+      state.courses.forEach(function (o) { if (o.q !== 0) p = Math.max(p, lastPeriodOf(o, wd)); });
+      if (!p) return now.getHours() * 60 + now.getMinutes() >= 720;
+    }
+    var end = PERIOD_END[p] || 0;
+    return now.getHours() * 60 + now.getMinutes() >= end;
+  }
+  // Classes today whose last period has ended and that have not been checked yet.
+  // Which classes can be checked now:
+  // once a class of today has ended, only today's ended classes;
+  // before that, every class of the latest class day in the past week.
+  function checkSession() {
+    var today = todayDate();
+    var ended = todaysClasses(today).filter(function (c) { return hasEnded(c, today); });
+    if (ended.length) return { day: today, list: ended };
+    for (var n = 1; n <= 6; n++) {
+      var d = addDays(today, -n);
+      var dk = ymd(d);
+      var l = todaysClasses(d);
+      if (l.length) return { day: d, list: l };
+    }
+    return null;
+  }
+  function pendingSession() {
+    var s = checkSession();
+    if (!s) return null;
+    var cc = state.cc[ymd(s.day)] || {};
+    var l = s.list.filter(function (c) { return !cc[c.id]; });
+    return l.length ? { day: s.day, list: l } : null;
+  }
+  // 「わからない」と答えた課題・小テストのうち、次の講義が始まるまでのもの（確認待ち）。
+  function unsureList() {
+    var now = new Date();
+    var out = [];
+    Object.keys(state.cc).forEach(function (k) {
+      Object.keys(state.cc[k]).forEach(function (cid) {
+        var r = state.cc[k][cid];
+        var c = courseById(cid);
+        if (!c || !r || typeof r !== 'object' || (r.a !== 'u' && r.q !== 'u')) return;
+        var day = parse(k);
+        var nx = nextClassDate(c, day);
+        var limit;
+        if (nx) {
+          var m = PERIOD_START[periodOf(c, wdOf(nx))];
+          limit = new Date(nx.getFullYear(), nx.getMonth(), nx.getDate(), m ? Math.floor(m / 60) : 23, m ? m % 60 : 59);
+        } else {
+          limit = addDays(day, 7);
+        }
+        if (now < limit) out.push({ day: day, id: cid, c: c, r: r, nx: nx, tm: nx ? startTimeOf(c, wdOf(nx)) : '' });
+      });
+    });
+    return out.sort(function (x, y) { return x.day - y.day; });
+  }
+  function unsureWhat(r) { return r.a === 'u' && r.q === 'u' ? '課題と小テスト' : r.a === 'u' ? '課題' : '小テスト'; }
+  function openResolve(u) {
+    openCheckin([{ day: u.day, id: u.id }], false);
+    ui.ci.resolve = true;
+    ui.ci.uq = u.r.q === 'u';
+    ui.ci.step = u.r.a === 'u' ? 'a' : 'q';
+    render();
+  }
+  function pendingToday(today) {
+    var cc = state.cc[ymd(today)] || {};
+    return todaysClasses(today).filter(function (c) { return !cc[c.id] && hasEnded(c, today); });
+  }
+
+  // ---------- state ----------
+  function normalize(d) {
+    var out = { v: 3, courses: [], items: [], cc: {}, sw: {} };
+    if (!d || typeof d !== 'object') return out;
+    var ids = {};
+    if (Array.isArray(d.courses)) {
+      d.courses.slice(0, 50).forEach(function (c) {
+        if (c && typeof c.id === 'string' && typeof c.n === 'string' && /^[A-Za-z0-9_-]{1,32}$/.test(c.id) && !ids[c.id]) {
+          ids[c.id] = 1;
+          var o = { id: c.id, n: c.n.slice(0, 60) };
+          if (Array.isArray(c.s)) {
+            var seen = {};
+            var s = [];
+            c.s.forEach(function (v) {
+              v = +v;
+              if (v >= 1 && v <= 69 && Math.floor(v) === v && !seen[v] && s.length < 20) { seen[v] = 1; s.push(v); }
+            });
+            if (s.length) o.s = s;
+          }
+          if (c.q === 0) o.q = 0;
+          if (c.ex) o.ex = 1;
+          if (typeof c.od === 'number' && c.od >= 0 && c.od <= 6 && Math.floor(c.od) === c.od) o.od = c.od;
+          if (typeof c.col === 'number' && c.col >= 0 && c.col <= 7 && Math.floor(c.col) === c.col) o.col = c.col;
+          if (typeof c.r === 'string' && c.r.trim()) o.r = c.r.trim().slice(0, 20);
+          if (c.w && typeof c.w === 'object') {
+            o.w = {
+              t: TYPES.indexOf(c.w.t) >= 0 ? c.w.t : '',
+              n: typeof c.w.n === 'string' ? c.w.n.slice(0, 60) : '',
+              tm: /^([01]\d|2[0-3]):[0-5]\d$/.test(c.w.tm || '') ? c.w.tm : ''
+            };
+          }
+          // date the course was added; older classes are never asked about
+          o.a = /^\d{4}-\d{2}-\d{2}$/.test(c.a || '') ? c.a : ymd(addDays(todayDate(), -1));
+          out.courses.push(o);
+        }
+      });
+    }
+    out.courses.forEach(function (c) { if (typeof c.col !== 'number') c.col = freeColor(out.courses); });
+    if (Array.isArray(d.items)) {
+      d.items.slice(0, MAX_ITEMS).forEach(function (it) {
+        if (!it || typeof it.id !== 'string' || !/^[A-Za-z0-9_-]{1,32}$/.test(it.id)) return;
+        if (!ids[it.c] || typeof it.t !== 'string' || !it.t) return;
+        var o = {
+          id: it.id,
+          c: it.c,
+          t: it.t.slice(0, 100),
+          k: KINDS.indexOf(it.k) >= 0 ? it.k : 'その他',
+          d: /^\d{4}-\d{2}-\d{2}$/.test(it.d || '') ? it.d : '',
+          x: /^\d{4}-\d{2}-\d{2}$/.test(it.x || '') ? it.x : ''
+        };
+        if (o.d && /^([01]\d|2[0-3]):[0-5]\d$/.test(it.tm || '')) o.tm = it.tm;
+        if (o.x && it.m) o.m = 1;
+        if (it.ex) o.ex = 1;
+        if (it.s) o.s = 1;
+        // closed items are kept as history for about half a year
+        if (o.x && o.x < ymd(addDays(todayDate(), -180))) return;
+        out.items.push(o);
+      });
+    }
+    var itemIds = {};
+    out.items.forEach(function (i) { itemIds[i.id] = 1; });
+    if (d.sw && typeof d.sw === 'object') {
+      var oldSw = ymd(addDays(todayDate(), -30));
+      Object.keys(d.sw).forEach(function (k) {
+        var v = d.sw[k];
+        if (/^\d{4}-\d{2}-\d{2}$/.test(k) && k >= oldSw && typeof v === 'number' && v >= -1 && v <= 6 && Math.floor(v) === v) out.sw[k] = v;
+      });
+    }
+    if (d.cc && typeof d.cc === 'object') {
+      var oldest = ymd(addDays(todayDate(), -21));
+      Object.keys(d.cc).forEach(function (k) {
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(k) || k < oldest || !d.cc[k] || typeof d.cc[k] !== 'object') return;
+        var m = {};
+        Object.keys(d.cc[k]).forEach(function (cid) {
+          if (!ids[cid]) return;
+          var raw = d.cc[k][cid];
+          if (raw && typeof raw === 'object') { m[cid] = normAns(raw, itemIds); return; }
+          var v = +raw;
+          if (v === 1 || v === 2 || v === 3) m[cid] = v;
+        });
+        if (Object.keys(m).length) out.cc[k] = m;
+      });
+    }
+    return out;
+  }
+  var ANS_KEYS = ['a', 'type', 'note', 'aMode', 'aDate', 'aTime', 'q', 'qMode', 'qDate', 'qTime', 'r', 'rMode', 'rDate', 'rTime'];
+  function normAns(raw, itemIds) {
+    var o = {};
+    ANS_KEYS.forEach(function (k) { o[k] = typeof raw[k] === 'string' ? raw[k].slice(0, 60) : ''; });
+    o.ids = Array.isArray(raw.ids) ? raw.ids.filter(function (x) { return typeof x === 'string' && itemIds[x]; }).slice(0, 12) : [];
+    if (Array.isArray(raw.al)) o.al = raw.al.slice(0, 8).filter(function (x) { return x && typeof x === 'object'; }).map(normExtra);
+    return o;
+  }
+  // One additional assignment answered in a check-in.
+  function normExtra(x) {
+    var o = {};
+    ['type', 'note', 'aMode', 'aDate', 'aTime'].forEach(function (k) { o[k] = typeof x[k] === 'string' ? x[k].slice(0, 60) : ''; });
+    return o;
+  }
+  // Lowest color index not used yet (cycles once all 8 are taken).
+  function freeColor(list) {
+    var used = [0, 0, 0, 0, 0, 0, 0, 0];
+    list.forEach(function (c) { if (typeof c.col === 'number') used[c.col]++; });
+    var min = Math.min.apply(null, used);
+    return used.indexOf(min);
+  }
+  function courseColor(cid) {
+    var c = courseById(cid);
+    return 'var(--c' + (c && typeof c.col === 'number' ? c.col : 7) + ')';
+  }
+  function toView(s) {
+    s.courses.forEach(function (c) { c.name = c.n; });
+    return s;
+  }
+  function toStore(s) {
+    s = s || state;
+    return {
+      v: 3,
+      courses: s.courses.map(function (c) {
+        var o = { id: c.id, n: c.n, a: c.a || ymd(addDays(todayDate(), -1)) };
+        if (c.s && c.s.length) o.s = c.s.slice();
+        if (hasOd(c)) o.od = c.od;
+        if (typeof c.col === 'number') o.col = c.col;
+        if (c.r) o.r = c.r;
+        if (c.w) o.w = { t: c.w.t || '', n: c.w.n || '', tm: c.w.tm || '' };
+        if (c.q === 0) o.q = 0;
+        if (c.ex) o.ex = 1;
+        return o;
+      }),
+      items: s.items.map(function (i) {
+        var o = { id: i.id, c: i.c, t: i.t, k: i.k, d: i.d, x: i.x };
+        if (i.d && i.tm) o.tm = i.tm;
+        if (i.x && i.m) o.m = 1;
+        if (i.ex) o.ex = 1;
+        if (i.s) o.s = 1;
+        return o;
+      }),
+      cc: s.cc,
+      sw: s.sw || {}
+    };
+  }
+  // Browser copy. With an account it is kept per person (LS_KEY:<id>), so two people on one browser never mix;
+  // without one it lives under LS_KEY. Nothing is written until the key is decided.
+  var lsKey = null;
+  function readLocal(key) {
+    try { var raw = localStorage.getItem(key); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+  }
+  function loadLocal() {
+    var d = lsKey ? readLocal(lsKey) : null;
+    state = d ? toView(normalize(d)) : { v: 3, courses: [], items: [], cc: {} };
+  }
+  function persistLocal() {
+    if (!lsKey) return;
+    try { localStorage.setItem(lsKey, JSON.stringify(toStore())); } catch (e) { /* ignore */ }
+  }
+  // Entries typed before signing in live under LS_KEY. When the account has nothing yet, offer to carry them over.
+  function offerTakeover() {
+    if (ui.takeover !== undefined || !ref || state.courses.length) return;
+    var anon = readLocal(LS_KEY);
+    if (!anon || !Array.isArray(anon.courses) || !anon.courses.length) return;
+    ui.takeover = anon;
+    render();
+  }
+  function useLocalOnly() {
+    ref = null;
+    if (lsKey !== LS_KEY) {
+      var keep = state;
+      lsKey = LS_KEY;
+      loadLocal();
+      // keep anything typed while the account check was running
+      if (!state.courses.length && keep.courses.length) state = keep;
+    }
+    ui.loading = false;
+    render();
+    setStatus('local');
+  }
+
+  // ---------- persistence (account db with local fallback) ----------
+  var ref = null;
+  var saveTimer = null;
+  var saving = false;
+  var dirty = false;
+
+  function setStatus(kind) {
+    var t = {
+      account: '保存先：Googleアカウント。ほかの端末でも同じ内容が出ます。',
+      local: window.KOMA_FB ? '保存先：このブラウザのみ。ログインすると、端末やブラウザを変えても引き継がれます。' : '保存先：このブラウザのみ。端末やブラウザを変えると引き継がれません。',
+      error: 'アカウントへの保存に失敗しました。このブラウザには保存済みで、次の操作でもう一度試します。'
+    };
+    $('storage').textContent = t[kind] || '';
+    // Inside Claude, people other than the owner cannot save to their account: say so where it is seen.
+    $('lsbar').hidden = !(kind === 'local' && window.KOMA_FB && !ui.lsOff);
+    renderAcct();
+  }
+  function changed() {
+    dirty = true;
+    persistLocal();
+    if (ref) { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 400); }
+  }
+  async function flush() {
+    if (!ref) return;
+    if (saving) { dirty = true; return; }
+    saving = true;
+    dirty = false;
+    try {
+      await ref.set(toStore());
+      setStatus('account');
+    } catch (e) {
+      var code = e && e.code;
+      if (code === 'invalid_argument' || code === 'not_granted' || code === 'revoked' || code === 'capability_disabled' || code === 'capability_removed') {
+        // this viewer may not save to an account: keep working in this browser, quietly
+        saving = false;
+        lsKey = LS_KEY;
+        persistLocal();
+        useLocalOnly();
+        return;
+      }
+      setStatus('error');
+    }
+    saving = false;
+    if (dirty) { clearTimeout(saveTimer); saveTimer = setTimeout(flush, 400); }
+  }
+  // In-app browsers (LINE, Instagram, ...) cannot sign in with Google.
+  function inAppBrowser() { return /\bLine\/|FBAN|FBAV|Instagram|MicroMessenger/i.test(navigator.userAgent || ''); }
+  function waitFb() {
+    return new Promise(function (res) {
+      if (window.KOMA_FB_DONE) { res(window.KOMA_FB || null); return; }
+      var t = setTimeout(function () { res(window.KOMA_FB || null); }, 8000);
+      window.addEventListener('koma-fb', function () { clearTimeout(t); res(window.KOMA_FB || null); }, { once: true });
+    });
+  }
+  var unsub = null;
+  // Signed out: the browser copy under LS_KEY, never the account's copy.
+  function toSignedOut() {
+    ref = null;
+    lsKey = LS_KEY;
+    loadLocal();
+    ui.loading = false;
+    render();
+    setStatus('local');
+  }
+  function startAccount(uid) {
+    var typed = lsKey === null ? state : null;
+    lsKey = LS_KEY + ':' + uid;
+    loadLocal();
+    if (typed && !state.courses.length && typed.courses.length) state = typed;
+    ui.takeover = undefined;
+    ui.loading = false;
+    render();
+    var r = window.KOMA_FB.doc(uid);
+    ref = r;
+    unsub = r.onSnapshot(function (snap) {
+      if (snap.metadata && snap.metadata.hasPendingWrites) return;
+      if (!snap.exists) {
+        setStatus('account');
+        if (state.courses.length) { dirty = true; flush(); }
+        offerTakeover();
+        return;
+      }
+      var d = toView(normalize(snap.data()));
+      if (JSON.stringify(toStore(d)) === JSON.stringify(toStore())) { setStatus('account'); offerTakeover(); return; }
+      if (saving || dirty) return;
+      state = d;
+      persistLocal();
+      render();
+      setStatus('account');
+      offerTakeover();
+    }, function () { setStatus('error'); });
+  }
+  function renderAcct() {
+    var box = $('acct');
+    if (!box) return;
+    box.textContent = '';
+    if (!window.KOMA_FB) { box.hidden = true; return; }
+    box.hidden = false;
+    if (ui.account) {
+      box.appendChild(h('span', {}, [document.createTextNode('ログイン中：'), h('b', { text: ui.account })]));
+      box.appendChild(h('button', { type: 'button', class: 'link', text: 'ログアウト', onclick: function () { window.KOMA_FB.signOut(); } }));
+    } else {
+      box.appendChild(h('button', { type: 'button', class: 'btn small', text: 'Googleでログイン', onclick: signIn }));
+    }
+  }
+  function signIn() {
+    if (inAppBrowser()) {
+      ui.toast = { text: 'LINEなどアプリの中のブラウザでは、Googleでログインできません。右下の「…」から「ブラウザで開く」を選んでください。' };
+      renderToast();
+      return;
+    }
+    window.KOMA_FB.signIn().catch(function () {
+      ui.toast = { text: 'ログインできませんでした。もう一度お試しください。' };
+      renderToast();
+    });
+  }
+  async function initCloud() {
+    var fb = await waitFb();
+    if (!fb) { useLocalOnly(); setStatus('local'); return; }
+    var first = true;
+    fb.onUser(function (u) {
+      if (unsub) { try { unsub(); } catch (e) { /* ignore */ } unsub = null; }
+      if (!first && ref && dirty) { try { flush(); } catch (e) { /* ignore */ } }
+      ref = null;
+      ui.account = u ? (u.displayName || u.email || 'Googleアカウント') : null;
+      if (u) startAccount(u.uid);
+      else if (first) { useLocalOnly(); setStatus('local'); }
+      else toSignedOut();
+      first = false;
+    });
+  }
+
+  // ---------- due-date logic ----------
+  function nowHM() { var n = new Date(); return pad(n.getHours()) + ':' + pad(n.getMinutes()); }
+  function dueInfo(item, today) {
+    if (!item.d) return { b: 5, label: '期限なし', cls: '' };
+    var d = parse(item.d);
+    var diff = diffDays(d, today);
+    var t = item.tm ? ' ' + item.tm : '';
+    if (diff < 0) return { b: 0, label: fmt(d) + t + '　' + (-diff) + '日超過', cls: 'bad', diff: diff };
+    if (diff === 0) {
+      if (item.tm && ymd(new Date()) === item.d && nowHM() >= item.tm) return { b: 0, label: '今日' + t + '（過ぎています）', cls: 'bad', diff: 0 };
+      return { b: 1, label: '今日' + (item.tm ? t + ' まで' : 'まで'), cls: 'warn', diff: diff };
+    }
+    if (diff === 1) return { b: 2, label: '明日 ' + fmt(d) + t, cls: 'warn', diff: diff };
+    if (diff <= 3) return { b: 2, label: fmt(d) + t + '　あと' + diff + '日', cls: '', diff: diff };
+    if (diff <= 7) return { b: 3, label: fmt(d) + t + '　あと' + diff + '日', cls: '', diff: diff };
+    return { b: 4, label: fmt(d) + t + '　あと' + diff + '日', cls: '', diff: diff };
+  }
+  // On time = closed on or before the due date (or no due date).
+  function isLate(it) { return !!(it.d && it.x && it.x > it.d); }
+
+  // ---------- actions ----------
+  function setMissed(id) {
+    var it = findItem(id);
+    if (!it) return;
+    it.x = ymd(new Date());
+    it.m = 1;
+    linger(id);
+    ui.toast = { id: id, text: '「' + it.t + '」を「できなかった」にしました。' };
+    changed();
+    render();
+  }
+  function setDone(id, done) {
+    var it = findItem(id);
+    if (!it) return;
+    it.x = done ? ymd(new Date()) : '';
+    delete it.m;
+    ui.toast = done ? { id: id, text: '「' + it.t + '」を完了にしました。' } : null;
+    if (done) linger(id); else delete lingerUntil[id];
+    changed();
+    render();
+  }
+  // A just-closed item stays in place (struck through) for a moment before moving to the records.
+  var LINGER_MS = 3000;
+  var lingerUntil = {};
+  function linger(id) {
+    lingerUntil[id] = Date.now() + LINGER_MS;
+    setTimeout(function () { if (lingerUntil[id] && lingerUntil[id] <= Date.now()) { delete lingerUntil[id]; if (!ui.ci) render(); } }, LINGER_MS + 50);
+  }
+  function isLingering(it) { return !!(it.x && lingerUntil[it.id] && lingerUntil[it.id] > Date.now()); }
+  function removeItem(id) {
+    state.items = state.items.filter(function (i) { return i.id !== id; });
+    if (ui.editing === id) endEdit();
+    ui.confirmItem = null;
+    ui.toast = null;
+    changed();
+    render();
+  }
+  function removeCourse(id) {
+    state.courses = state.courses.filter(function (c) { return c.id !== id; });
+    state.items = state.items.filter(function (i) { return i.c !== id; });
+    Object.keys(state.cc).forEach(function (k) {
+      delete state.cc[k][id];
+      if (!Object.keys(state.cc[k]).length) delete state.cc[k];
+    });
+    if (ui.course === id) ui.course = '';
+    if (ui.tt === id) ui.tt = null;
+    if (ui.editing && !findItem(ui.editing)) endEdit();
+    ui.confirmCourse = null;
+    changed();
+    render();
+  }
+  function startEdit(id) {
+    var it = findItem(id);
+    if (!it) return;
+    ui.editing = id;
+    ui.kind = it.k;
+    ui.course = it.c;
+    $('adddet').open = true;
+    render();
+    $('f-title').value = it.t;
+    $('f-due').value = it.d;
+    try { $('adddet').scrollIntoView({ block: 'start' }); } catch (e) { /* ignore */ }
+    $('f-time').value = it.tm || '';
+    showTime(!!it.tm);
+    $('f-title').focus();
+  }
+  function endEdit() {
+    ui.editing = null;
+    $('f-title').value = '';
+    $('f-due').value = '';
+    $('f-time').value = '';
+    showTime(false);
+    $('msg').textContent = '';
+  }
+  function toggleSlot(cid, v) {
+    var c = courseById(cid);
+    if (!c) return;
+    var s = (c.s || []).slice();
+    var i = s.indexOf(v);
+    if (i >= 0) s.splice(i, 1); else s.push(v);
+    if (s.length) c.s = s; else delete c.s;
+    changed();
+    render();
+  }
+  function toggleOd(cid, w) {
+    var c = courseById(cid);
+    if (!c) return;
+    if (c.od === w) delete c.od; else c.od = w;
+    changed();
+    render();
+  }
+  function toggleAsk(cid) {
+    var c = courseById(cid);
+    if (!c) return;
+    if (c.q === 0) delete c.q; else c.q = 0;
+    changed();
+    render();
+  }
+
+  // ---------- check-in flow ----------
+  function newAns() {
+    return { a: '', type: '', note: '', aMode: '', aDate: '', aTime: '', q: '', qMode: '', qDate: '', qTime: '', r: '', rMode: '', rDate: '', rTime: '' };
+  }
+  function ansFor(cid, day) {
+    var rec = (state.cc[ymd(day)] || {})[cid];
+    var o = newAns();
+    if (rec && typeof rec === 'object') {
+      ANS_KEYS.forEach(function (k) { if (rec[k]) o[k] = rec[k]; });
+      if (rec.al) o.al = rec.al.map(normExtra);
+      o.prev = true;
+    }
+    return o;
+  }
+  // The day a manual check-in covers: today if it has classes, otherwise the latest class day in the past week.
+  function checkinDay(today) {
+    for (var n = 0; n <= 6; n++) {
+      var d = addDays(today, -n);
+      if (todaysClasses(d).length) return d;
+    }
+    return null;
+  }
+  // fromBanner: only classes that have ended and are unchecked. Otherwise: every class of the day, with earlier answers filled in.
+  function startCheckin(fromBanner) {
+    var s = fromBanner === true ? pendingSession() : checkSession();
+    if (!s) {
+      ui.toast = { text: '直近1週間に講義後チェックの対象がありません。「時間割」で講義の曜日と時限を入れると、講義の後に聞かれます。' };
+      render();
+      return;
+    }
+    var day = s.day;
+    var list = s.list;
+    openCheckin(list.map(function (c) { return { day: day, id: c.id }; }), false);
+  }
+  function openCheckin(sess, older) {
+    ui.ci = {
+      day: sess[0].day,
+      days: sess.map(function (x) { return x.day; }),
+      ids: sess.map(function (x) { return x.id; }),
+      older: older, i: 0, ans: ansFor(sess[0].id, sess[0].day),
+      sum: { a: 0, q: 0, r: 0, u: 0, x: 0, ext: 0 }, done: false, msg: '', cancel: null
+    };
+    ui.toast = null;
+    ui.wantCheck = false;
+    ui.confirmSkip = false;
+    render();
+    window.scrollTo(0, 0);
+  }
+  // Unchecked classes from the past week, other than those the normal check covers. Course must have existed that day.
+  // The latest earlier check-in of this course that was actually answered (not skipped / cancelled).
+  function prevRecord(cid, day) {
+    var key = ymd(day), best = null;
+    Object.keys(state.cc).forEach(function (k) {
+      var r = state.cc[k][cid];
+      if (k < key && r && typeof r === 'object' && (!best || k > best.k)) best = { k: k, r: r };
+    });
+    return best;
+  }
+  function describeRec(r) {
+    var parts = [];
+    if (r.a === 'y') parts.push('課題 ' + (1 + (r.al ? r.al.length : 0)) + '件（' + [].concat((r.al || []).map(function (x) { return x.type || '課題'; }), [r.type || '課題']).join('・') + '）');
+    else parts.push('課題なし');
+    parts.push(r.q === 'y' ? '小テストあり' : '小テストなし');
+    parts.push(r.r === 'y' ? '復習あり' : '復習なし');
+    return parts.join('／');
+  }
+  // Every class of the past 7 days (newest first), checked or not.
+  function pastSessions() {
+    var today = todayDate();
+    var out = [];
+    for (var n = 1; n <= 7; n++) {
+      var d = addDays(today, -n);
+      todaysClasses(d).forEach(function (c) { out.push({ day: d, id: c.id }); });
+    }
+    return out;
+  }
+  function olderSessions() {
+    return pastSessions().filter(function (x) { return !(state.cc[ymd(x.day)] || {})[x.id]; }).reverse();
+  }
+  function skipSessions(sess) {
+    sess.forEach(function (x) {
+      var key = ymd(x.day);
+      state.cc[key] = state.cc[key] || {};
+      if (!state.cc[key][x.id]) state.cc[key][x.id] = 2;
+    });
+  }
+  function nextStep() {
+    var ci = ui.ci;
+    ci.cancel = null;
+    ci.msg = '';
+    ci.step = null;
+    ci.editing = false;
+    if (ci.resolve) { ui.ci = null; ui.toast = { text: '確認した内容を登録しました' }; render(); return; }
+    if (ci.i + 1 < ci.ids.length) {
+      ci.i++;
+      ci.day = ci.days[ci.i];
+      ci.ans = ansFor(ci.ids[ci.i], ci.day);
+    } else {
+      ci.done = true;
+    }
+    render();
+    window.scrollTo(0, 0);
+  }
+  // Remove undone items a previous check-in of this class created.
+  function dropPrevious(key, cid) {
+    var prev = (state.cc[key] || {})[cid];
+    var keepStar = {};
+    if (prev && typeof prev === 'object' && prev.ids) {
+      state.items = state.items.filter(function (i) {
+        if (prev.ids.indexOf(i.id) >= 0 && !i.x) { if (i.s) keepStar[i.k] = 1; return false; }
+        return true;
+      });
+    }
+    return keepStar;
+  }
+  function markCancelled() {
+    var ci = ui.ci;
+    var cid = ci.ids[ci.i];
+    var key = ymd(ci.day);
+    dropPrevious(key, cid);
+    state.cc[key] = state.cc[key] || {};
+    state.cc[key][cid] = 3;
+    ci.sum.x++;
+    changed();
+    var due = state.items.filter(function (i) { return i.c === cid && !i.x && i.d === key; });
+    if (due.length) { ci.cancel = { ids: due.map(function (i) { return i.id; }) }; render(); return; }
+    nextStep();
+  }
+  function extendCancelled(yes) {
+    var ci = ui.ci;
+    if (yes && ci.cancel) {
+      ci.cancel.ids.forEach(function (id) {
+        var it = findItem(id);
+        if (it && it.d) { it.d = ymd(addDays(parse(it.d), 7)); ci.sum.ext++; }
+      });
+      changed();
+    }
+    nextStep();
+  }
+  // Start time of a course's first period on a given weekday, e.g. "10:30".
+  function startTimeOf(c, wd) {
+    var p = periodOf(c, wd);
+    var m = PERIOD_START[p];
+    return m ? pad(Math.floor(m / 60)) + ':' + pad(m % 60) : '';
+  }
+  // Returns {d, tm}. "Next class" means by the start of that class.
+  function dueFrom(mode, date, time, c, today) {
+    if (mode === 'date') return { d: date || '', tm: date && time ? time : '' };
+    if (mode === 'next') {
+      var nx = nextClassDate(c, today);
+      return nx ? { d: ymd(nx), tm: time || '' } : { d: '', tm: '' };
+    }
+    return { d: '', tm: '' };
+  }
+  function addAutoItem(c, kind, title, due, made) {
+    var dup = null;
+    state.items.forEach(function (i) { if (!dup && !i.x && i.c === c.id && i.k === kind && i.t === title && i.d === due.d && (i.tm || '') === due.tm) dup = i; });
+    if (dup) { made.push(dup.id); return true; }
+    if (state.items.length >= MAX_ITEMS) return false;
+    var id = newId();
+    var o = { id: id, c: c.id, t: title, k: kind, d: due.d, x: '' };
+    if (due.d && due.tm) o.tm = due.tm;
+    // answers given while trying the example classes are part of the example, so 「例を削除」 removes them too
+    if (c.ex) o.ex = 1;
+    state.items.push(o);
+    made.push(id);
+    return true;
+  }
+  function commitCheckin() {
+    var ci = ui.ci;
+    var a = ci.ans;
+    var c = courseById(ci.ids[ci.i]);
+    var today = todayDate();
+    if (!a.a || !a.q || !a.r) { ci.msg = '3つとも選んでください。分からないときは「わからない」を選びます。'; render(); return; }
+    if ((a.a === 'y' && a.aMode === 'date' && !a.aDate) || (a.q === 'y' && a.qMode === 'date' && !a.qDate) || (a.r === 'y' && a.rMode === 'date' && !a.rDate)) {
+      ci.msg = '「日付を選ぶ」を選んだ項目は、日付を入れてください。';
+      render();
+      return;
+    }
+    var ok = true;
+    if (c) {
+      var key = ymd(ci.day);
+      state.cc[key] = state.cc[key] || {};
+      var keepStar = dropPrevious(key, c.id);
+      var made = [];
+      if (a.a === 'y') {
+        (a.al || []).forEach(function (x) {
+          var tx = (x.type || '課題') + (x.note ? '：' + x.note : '');
+          ok = addAutoItem(c, '課題', tx, dueFrom(x.aMode, x.aDate, x.aTime, c, today), made) && ok;
+          ci.sum.a++;
+        });
+        var t1 = (a.type || '課題') + (a.note ? '：' + a.note : '');
+        ok = addAutoItem(c, '課題', t1, dueFrom(a.aMode, a.aDate, a.aTime, c, today), made) && ok;
+        ci.sum.a++;
+      }
+      if (a.q === 'y') {
+        ok = addAutoItem(c, '小テスト', '小テスト', dueFrom(a.qMode, a.qDate, a.qTime, c, today), made) && ok;
+        ci.sum.q++;
+      }
+      if (a.r === 'y') {
+        ok = addAutoItem(c, '復習', '復習', dueFrom(a.rMode, a.rDate, a.rTime, c, today), made) && ok;
+        ci.sum.r++;
+      }
+      made.forEach(function (id) { var it = findItem(id); if (it && keepStar[it.k]) it.s = 1; });
+      ['a', 'q'].forEach(function (k) { if (a[k] === 'u') ci.sum.u++; });
+      var rec = {};
+      ANS_KEYS.forEach(function (k) { rec[k] = a[k] || ''; });
+      if (a.a === 'y' && a.al && a.al.length) rec.al = a.al.map(normExtra);
+      rec.ids = made;
+      state.cc[key][c.id] = rec;
+    }
+    if (!ok) { ci.msg = '件数が上限（' + MAX_ITEMS + '件）です。完了済みを削除してください。'; }
+    changed();
+    if (!ok) { render(); return; }
+    nextStep();
+  }
+  function closeCheckin() {
+    ui.ci = null;
+    render();
+  }
+
+  // ---------- rendering ----------
+  function renderForm() {
+    var sel = $('f-course');
+    var keep = ui.course;
+    sel.textContent = '';
+    if (!state.courses.length) {
+      sel.appendChild(h('option', { value: '', text: '先に講義を追加してください' }));
+    } else {
+      // today's classes first (most likely the one the assignment is for), then the rest by timetable order
+      var td = todaysClasses(todayDate());
+      var tdIds = td.map(function (c) { return c.id; });
+      var rest = sortedCourses().filter(function (c) { return tdIds.indexOf(c.id) < 0; });
+      var label = function (c) { return c.name + (slotsOf(c).length ? '（' + slotLabel(c) + '）' : ''); };
+      if (td.length) {
+        sel.appendChild(h('optgroup', { label: '今日の講義' }, td.map(function (c) { return h('option', { value: c.id, text: label(c) }); })));
+        sel.appendChild(h('optgroup', { label: 'ほかの講義' }, rest.map(function (c) { return h('option', { value: c.id, text: label(c) }); })));
+      } else {
+        rest.forEach(function (c) { sel.appendChild(h('option', { value: c.id, text: label(c) })); });
+      }
+      if (!keep || !courseName(keep)) keep = td.length ? td[0].id : state.courses[0].id;
+      sel.value = keep;
+      ui.course = keep;
+    }
+    var kinds = $('kinds');
+    kinds.textContent = '';
+    KINDS.forEach(function (k, i) {
+      var inp = h('input', { type: 'radio', name: 'kind', id: 'k-' + i, value: k });
+      inp.checked = ui.kind === k;
+      inp.addEventListener('change', function () { ui.kind = k; });
+      kinds.appendChild(h('label', null, [inp, h('span', { text: k })]));
+    });
+    $('f-submit').textContent = ui.editing ? '更新' : '追加';
+    $('f-cancel').hidden = !ui.editing;
+    $('addsum').textContent = ui.editing ? '内容を編集' : '＋ 課題などを追加';
+  }
+
+  function itemRow(it, today, isDone) {
+    var info = dueInfo(it, today);
+    var expanded = ui.expanded === it.id;
+    var dueText, dueCls = '';
+    if (isDone && it.m) { dueText = 'できなかった'; dueCls = 'bad'; }
+    else if (isDone) dueText = '完了 ' + fmt(parse(it.x)) + (isLate(it) ? '（期限後）' : '');
+    else { dueText = info.label; dueCls = info.cls; }
+    var courseLine = cellName(courseName(it.c)) + (it.t !== it.k ? '・' + it.k : '') + (it.ex ? '・例' : '');
+
+    var ring = h('button', {
+      type: 'button',
+      class: 'ring' + (it.m ? ' missed' : ''),
+      role: 'checkbox',
+      style: '--cc:' + courseColor(it.c),
+      'aria-checked': isDone && !it.m ? 'true' : 'false',
+      'aria-label': (isDone ? '未完了に戻す：' : '完了にする：') + it.t,
+      onclick: function () { setDone(it.id, !isDone); }
+    }, [h('i', { 'aria-hidden': 'true', text: isDone ? (it.m ? '－' : '✓') : '' })]);
+
+    var body = h('button', {
+      type: 'button', class: 'ib', 'aria-expanded': expanded ? 'true' : 'false',
+      'aria-label': it.t + '（' + courseLine + '、' + dueText + '）の操作を' + (expanded ? '閉じる' : '開く'),
+      onclick: function () { ui.expanded = expanded ? null : it.id; ui.confirmItem = null; render(); }
+    }, [
+      h('span', { class: 'ibt' }, [
+        h('span', { class: 'ic' }, [h('i', { class: 'cdot', 'aria-hidden': 'true', style: 'background:' + courseColor(it.c) }), courseLine]),
+        h('span', { class: 'ititle' }, [it.s && !isDone ? h('span', { class: 'star', text: '★ ' }) : null, it.t])
+      ]),
+      h('span', { class: 'idue ' + dueCls, text: dueText }),
+      h('span', { class: 'ichev' + (expanded ? ' open' : ''), 'aria-hidden': 'true', text: '›' })
+    ]);
+
+    var kids = [ring, body];
+    if (expanded) {
+      var acts = [];
+      if (!isDone) acts.push(h('button', { type: 'button', class: 'link', text: it.s ? '★を外す' : '★重要', onclick: function () {
+        if (it.s) delete it.s; else it.s = 1;
+        changed();
+        render();
+      } }));
+      if (!isDone && info.b === 0) acts.push(h('button', { type: 'button', class: 'link', text: 'できなかった', onclick: function () { setMissed(it.id); } }));
+      acts.push(h('button', { type: 'button', class: 'link', text: '編集', onclick: function () { ui.expanded = null; startEdit(it.id); } }));
+      if (ui.confirmItem === it.id) {
+        acts.push(h('button', { type: 'button', class: 'link danger', text: '削除する', onclick: function () { removeItem(it.id); } }));
+        acts.push(h('button', { type: 'button', class: 'link', text: 'やめる', onclick: function () { ui.confirmItem = null; render(); } }));
+      } else {
+        acts.push(h('button', { type: 'button', class: 'link', text: '削除', onclick: function () { ui.confirmItem = it.id; render(); } }));
+      }
+      kids.push(h('div', { class: 'iacts' }, acts));
+    }
+    return h('li', { class: 'item' + (isDone ? ' done' : '') }, kids);
+  }
+
+  function renderOpen(today) {
+    var host = $('open');
+    host.textContent = '';
+    var open = state.items.filter(function (i) { return !i.x || isLingering(i); });
+    if (!state.courses.length) return;
+    if (!open.length) {
+      host.appendChild(h('p', { class: 'none', text: state.items.length ? '残っているものはありません。' : 'まだ何も追加されていません。講義後チェックか、下の「課題などを追加」から入れられます。' }));
+      return;
+    }
+    var rows = open.map(function (it, idx) { return { it: it, idx: idx, info: dueInfo(it, today) }; });
+    rows.sort(function (a, b) {
+      if (a.info.b !== b.info.b) return a.info.b - b.info.b;
+      if (!!a.it.s !== !!b.it.s) return a.it.s ? -1 : 1;
+      if (a.it.d !== b.it.d) return a.it.d < b.it.d ? -1 : 1;
+      var ta = a.it.tm || '24:00', tb = b.it.tm || '24:00';
+      if (ta !== tb) return ta < tb ? -1 : 1;
+      return a.idx - b.idx;
+    });
+    for (var b = 0; b < BUCKETS.length; b++) {
+      var g = rows.filter(function (r) { return r.info.b === b; });
+      if (!g.length) continue;
+      var cls = b === 0 ? 'bad' : (b === 1 ? 'warn' : '');
+      host.appendChild(h('div', { class: 'group' }, [
+        h('div', { class: 'gh ' + cls }, [h('span', { text: BUCKETS[b] }), h('span', { class: 'n', text: g.length + ' 件' })]),
+        h('ul', { class: 'items' }, g.map(function (r) { return itemRow(r.it, today, !!r.it.x); }))
+      ]));
+    }
+  }
+
+  function setPanelTitle(el, title, n, sub) {
+    el.textContent = '';
+    el.appendChild(h('span', { class: 'ptitle' }, [
+      h('b', null, [title, h('span', { class: 'n', text: n + ' 件' })]),
+      sub ? h('small', { text: sub }) : null
+    ]));
+  }
+  function isRecent(it, today) { return diffDays(today, parse(it.x)) < 7; }
+  function renderDone(today) {
+    var closed = state.items.filter(function (i) { return i.x && !isLingering(i); });
+    var recent = closed.filter(function (i) { return isRecent(i, today); });
+    var past = closed.filter(function (i) { return !isRecent(i, today); });
+    var byDate = function (a, b) { return a.x < b.x ? 1 : (a.x > b.x ? -1 : 0); };
+
+    var sec = $('donesec');
+    sec.hidden = !recent.length;
+    var host = $('done');
+    host.textContent = '';
+    if (recent.length) {
+      recent.sort(byDate);
+      setPanelTitle($('donesum'), '最近の記録', recent.length, '完了・できなかったもの（1週間で過去の記録へ）');
+      host.appendChild(h('ul', { class: 'items' }, recent.map(function (it) { return itemRow(it, today, true); })));
+    }
+
+    var hs = $('histsec');
+    hs.hidden = !past.length;
+    var hh = $('hist');
+    hh.textContent = '';
+    if (!past.length) return;
+    past.sort(byDate);
+    var onTime = 0, late = 0, missed = 0;
+    closed.forEach(function (i) { if (i.m) missed++; else if (isLate(i)) late++; else onTime++; });
+    setPanelTitle($('histsum'), '過去の記録', past.length, '約半年分');
+    hh.appendChild(h('p', { class: 'hstat', text: 'これまで：期限内に完了 ' + onTime + '　期限後に完了 ' + late + '　できなかった ' + missed }));
+    hh.appendChild(h('ul', { class: 'items' }, past.slice(0, 100).map(function (it) { return itemRow(it, today, true); })));
+  }
+
+  function ttGrid(c) {
+    var list = slotsOf(c).slice().sort(function (a, b) { return slotKey(a) - slotKey(b); });
+    var chips = list.map(function (v) {
+      var lab = DAYS[Math.floor(v / 10)] + '曜' + (v % 10) + '限';
+      return h('span', { class: 'slotchip' }, [
+        h('span', { text: lab }),
+        h('button', { type: 'button', class: 'slotx', 'aria-label': lab + 'を外す', text: '×', onclick: function () { toggleSlot(c.id, v); } })
+      ]);
+    });
+    var g = h('div', { class: 'slots' }, chips.length ? chips.concat([h('span', { class: 'foot', text: '追加は上の表の「＋」から' })]) : [h('span', { class: 'foot', text: 'まだありません。上の表の空いたコマの「＋」から入れます。' })]);
+    var od = h('div', { class: 'odrow', role: 'group', 'aria-label': '時限のない講義の、聞く曜日' }, [
+      h('span', { class: 'odl', text: '時限のない講義（オンデマンドなど）は、講義後チェックで聞く曜日を1つ選びます' })
+    ].concat([1, 2, 3, 4, 5, 6, 0].map(function (w) {
+      var on = c.od === w;
+      return h('button', { type: 'button', class: 'cell' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', 'aria-label': DAYS[w] + '曜に聞く', text: DAYS[w], onclick: function () { toggleOd(c.id, w); } });
+    })));
+    var rin = h('input', { type: 'text', id: 'room-' + c.id, maxlength: '20', placeholder: '例：大講義室、205', value: c.r || '' });
+    var saved = h('span', { class: 'saved', role: 'status', 'aria-live': 'polite' });
+    var saveRoom = function () {
+      var v = rin.value.replace(/\s+/g, ' ').trim();
+      var before = c.r || '';
+      if (v) c.r = v; else delete c.r;
+      if ((c.r || '') !== before) changed();
+      saved.textContent = '保存しました';
+    };
+    rin.addEventListener('change', saveRoom);
+    var room = h('form', { class: 'roomf', autocomplete: 'off', onsubmit: function (e) { e.preventDefault(); saveRoom(); rin.blur(); } }, [
+      h('label', { class: 'legend', for: 'room-' + c.id, text: '教室名（任意）' }),
+      h('div', { class: 'row' }, [rin, h('button', { type: 'submit', class: 'btn small', text: '決定' }), saved])
+    ]);
+    var wkOn = !!c.w;
+    var wkBox = h('input', { type: 'checkbox', id: 'wk-' + c.id });
+    wkBox.checked = wkOn;
+    wkBox.addEventListener('change', function () {
+      if (wkBox.checked) c.w = { t: '', n: '', tm: '' }; else delete c.w;
+      changed();
+      render();
+    });
+    var wkKids = [h('label', { class: 'askl', for: 'wk-' + c.id }, [wkBox, h('span', { text: '毎週出る課題がある' })])];
+    if (wkOn) {
+      wkKids.push(h('div', { class: 'kinds' }, TYPES.map(function (t) {
+        var on = c.w.t === t;
+        return h('button', { type: 'button', class: 'opt' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', text: t, onclick: function () { c.w.t = on ? '' : t; changed(); render(); } });
+      })));
+      var wn = h('input', { type: 'text', id: 'wkn-' + c.id, maxlength: '60', placeholder: '一言メモ（任意）', value: c.w.n || '' });
+      wn.addEventListener('change', function () { c.w.n = wn.value.trim(); changed(); });
+      wn.addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); c.w.n = wn.value.trim(); changed(); wn.blur(); } });
+      var wt = h('input', { type: 'time', 'aria-label': '毎週の課題の締切時刻（任意）', value: c.w.tm || '' });
+      wt.addEventListener('change', function () { c.w.tm = wt.value; changed(); });
+      wkKids.push(wn);
+      wkKids.push(h('div', { class: 'row' }, [h('span', { class: 'legend', text: '締切は次の講義。時刻（任意）' }), wt]));
+      wkKids.push(h('p', { class: 'foot', text: '講義後チェックで「毎週の課題を入れる」を押すと、この内容で入ります。' }));
+    }
+    var weekly = h('div', { class: 'wkf' }, wkKids);
+    return h('div', { class: 'ttwrap' }, [
+      h('span', { class: 'edh', text: '登録しているコマ' }), g,
+      h('span', { class: 'edh', text: '時限のない講義（オンデマンドなど）' }), od,
+      h('span', { class: 'edh', text: '教室' }), room,
+      h('span', { class: 'edh', text: '毎週の課題' }), weekly
+    ]);
+  }
+
+  // Read-only weekly table; tapping a class opens its editor in the list below.
+  // Weekly table. Empty cells carry a "+" to put a class there; a filled cell opens that class's settings.
+  // In the small table cells show only the course name, not the theme after " / ".
+  function cellName(n) { var i = n.indexOf(' / '); return i > 0 ? n.slice(0, i) : n; }
+  function renderTable() {
+    var box = $('ttable');
+    box.textContent = '';
+    var cs = state.courses;
+    box.hidden = false;
+    var days = [1, 2, 3, 4, 5];
+    var cands = ocr.status === 'review' ? ocr.rows.filter(function (r) { return r.on && r.day >= 1 && r.period >= 1; }) : [];
+    var candAt = function (v) { for (var k = 0; k < ocr.rows.length; k++) { var r = ocr.rows[k]; if (r.on && r.day * 10 + r.period === v) return k; } return -1; };
+    var needSat = cands.some(function (r) { return r.day === 6; }) || cs.some(function (c) { return slotsOf(c).some(function (v) { return Math.floor(v / 10) === 6; }); });
+    var need6 = cands.some(function (r) { return r.period === 6; }) || cs.some(function (c) { return slotsOf(c).some(function (v) { return v % 10 === 6; }); });
+    if (ui.ttFull || needSat) days.push(6);
+    var maxP = ui.ttFull || need6 ? 6 : 5;
+    cs.forEach(function (c) { slotsOf(c).forEach(function (v) { if (v % 10 > maxP) maxP = v % 10; }); });
+    var wdNow = todayDate().getDay();
+    var g = h('div', { class: 'ttable', style: 'grid-template-columns: 28px repeat(' + days.length + ', minmax(0, 1fr))' });
+    g.appendChild(h('span'));
+    days.forEach(function (w) { g.appendChild(h('span', { class: 'tth' + (w === wdNow ? ' now' : ''), text: DAYS[w] })); });
+    for (var p = 1; p <= maxP; p++) {
+      var m = PERIOD_START[p];
+      g.appendChild(h('span', { class: 'ttp' }, [h('b', { text: String(p) }), h('small', { text: pad(Math.floor(m / 60)) + ':' + pad(m % 60) })]));
+      days.forEach(function (w) {
+        var v = w * 10 + p;
+        var c = null;
+        cs.forEach(function (x) { if (!c && slotsOf(x).indexOf(v) >= 0) c = x; });
+        var ck = candAt(v);
+        if (ck >= 0 && !(c && matchCourse(ocr.rows[ck]) === c)) {
+          var cr = ocr.rows[ck];
+          g.appendChild(h('button', { type: 'button', class: 'ttc cand' + (ocr.edit === ck ? ' picking' : ''), 'aria-label': DAYS[w] + '曜' + p + '限 読み取り候補 ' + cr.name + (c ? '（' + c.name + 'と重なり）' : '') + '。押すと直せます', onclick: function () { ocr.edit = ocr.edit === ck ? null : ck; render(); } }, [
+            h('span', { class: 'ttn', text: cellName(cr.name) }),
+            h('span', { class: 'ttr', text: c ? '重なり' : (cr.room || '新規') })
+          ]));
+          return;
+        }
+        if (!c) {
+          var picking = ui.addSlot === v;
+          g.appendChild(h('button', { type: 'button', class: 'ttc empty' + (picking ? ' picking' : ''), 'aria-label': DAYS[w] + '曜' + p + '限に講義を入れる', onclick: function () { ui.addSlot = picking ? null : v; render(); } }, [h('span', { class: 'ttplus', 'aria-hidden': 'true', text: '＋' })]));
+          return;
+        }
+        var cid = c.id;
+        g.appendChild(h('button', { type: 'button', class: 'ttc', style: '--cc:' + courseColor(cid), 'aria-label': DAYS[w] + '曜' + p + '限 ' + c.name + (c.r ? '、' + c.r : '') + '。押すと設定を開く', onclick: function () {
+          ui.tt = cid;
+          ui.addSlot = null;
+          render();
+          var r = $('room-' + cid);
+          if (r) try { r.closest('li').scrollIntoView({ block: 'center' }); } catch (e) { /* ignore */ }
+        } }, [h('span', { class: 'ttn', text: cellName(c.name) }), c.r ? h('span', { class: 'ttr', text: c.r }) : null]));
+      });
+    }
+    box.appendChild(g);
+    if (!(needSat && need6)) box.appendChild(h('button', { type: 'button', class: 'link', text: ui.ttFull ? (needSat ? '6限を隠す' : need6 ? '土曜を隠す' : '土曜・6限を隠す') : (needSat ? '6限も表示する' : need6 ? '土曜も表示する' : '土曜・6限も表示する'), onclick: function () { ui.ttFull = !ui.ttFull; render(); } }));
+    if (ui.addSlot) {
+      var sh = slotSheet(ui.addSlot);
+      box.appendChild(sh);
+      setTimeout(function () { try { sh.scrollIntoView({ block: 'nearest', behavior: 'smooth' }); } catch (e) { /* ignore */ } }, 0);
+    }
+    var ods = cs.filter(hasOd);
+    if (ods.length) box.appendChild(h('p', { class: 'foot', text: '時限なし：' + ods.map(function (c) { return c.name + '（' + DAYS[c.od] + '）'; }).join('、') }));
+  }
+  // Choose which class goes into the tapped cell: an existing one, or a new name.
+  function slotSheet(v) {
+    var lab = DAYS[Math.floor(v / 10)] + '曜' + (v % 10) + '限';
+    var put = function (cid) {
+      var c = courseById(cid);
+      if (!c) return;
+      var sl = (c.s || []).slice();
+      if (sl.indexOf(v) < 0) sl.push(v);
+      c.s = sl;
+      ui.addSlot = null;
+      changed();
+      render();
+    };
+    var kids = [h('p', { class: 'qt', text: lab + 'に入れる講義' })];
+    var cs = sortedCourses();
+    if (cs.length) {
+      var sel = h('select', { id: 'slotpick', 'aria-label': '登録済みの講義から選ぶ' }, [h('option', { value: '', text: '登録済みの講義から選ぶ（' + cs.length + '件）' })].concat(cs.map(function (c) {
+        return h('option', { value: c.id, text: c.name + (slotsOf(c).length ? '（' + slotLabel(c) + '）' : '') });
+      })));
+      sel.addEventListener('change', function () { if (sel.value) put(sel.value); });
+      kids.push(sel);
+    }
+    var inp = h('input', { type: 'text', id: 'slotnew', maxlength: '40', placeholder: cs.length ? 'または新しい講義名' : '講義名を入力' });
+    var msg = h('span', { class: 'msg', role: 'status' });
+    kids.push(h('form', { class: 'cform', autocomplete: 'off', onsubmit: function (e) {
+      e.preventDefault();
+      var name = inp.value.replace(/\s+/g, ' ').trim();
+      if (!name) { msg.textContent = '講義名を入力してください。'; return; }
+      var same = null;
+      state.courses.forEach(function (c) { if (c.name.toLowerCase() === name.toLowerCase()) same = c; });
+      if (same) { put(same.id); return; }
+      if (state.courses.length >= 30) { msg.textContent = '講義は30件まで追加できます。'; return; }
+      var id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+      state.courses.push({ id: id, n: name, name: name, a: ymd(todayDate()), col: freeColor(state.courses), s: [v] });
+      ui.addSlot = null;
+      changed();
+      render();
+    } }, [inp, h('button', { type: 'submit', class: 'btn small', text: '追加' })]));
+    kids.push(msg);
+    kids.push(h('button', { type: 'button', class: 'link', text: 'やめる', onclick: function () { ui.addSlot = null; render(); } }));
+    return h('div', { class: 'sheet' }, kids);
+  }
+
+  // ---------- timetable from a screenshot (reads the image with Claude, then the person confirms) ----------
+  var ocrApi = null;
+  var ocr = { status: 'idle', rows: [], msg: '', ctl: null };
+  var DAY_NAMES = { '日': 0, '月': 1, '火': 2, '水': 3, '木': 4, '金': 5, '土': 6 };
+  async function initOcr() {
+    try {
+      if (!window.claude || typeof window.claude.use !== 'function') return;
+      var smp = await window.claude.use('sample');
+      if (!smp) return;
+      var lim = null;
+      try { lim = await smp.limits(); } catch (e) { lim = null; }
+      if (!lim || !lim.images) return;
+      ocrApi = smp;
+      ocr.accept = (lim.images.mediaTypes || []).join(',');
+      ocr.maxCount = lim.images.maxCount || 1;
+      if (!ui.ci) render();
+    } catch (e) { ocrApi = null; }
+  }
+  var OCR_PROMPT = [
+    'これは大学の時間割（UNIPAなどの履修画面）のスクリーンショットです。',
+    '表に載っている講義を読み取り、JSON配列だけを返してください。説明文は不要です。',
+    '形式: [{"name":"民法I","day":"火","period":1,"room":"大講義室"}]',
+    '・name は講義名。「/」の後ろが授業のテーマなら、同じ科目名で内容が違う授業を区別するためテーマまで残し、「経済学G / 日本の経済と社会」のように「 / 」でつなぐ',
+    '・科目コード（LK00020002など）、「/(人)(教)英」「/(人)(医)医 中級」のような対象学部・クラスの表示、「前期の履修クラスに登録。」のような説明文は name に含めない（例：「中国語I基礎b」「英語Iコミュニケーション」）',
+    '・day は 月 火 水 木 金 土 のいずれか1文字',
+    '・period は時限の数字（1〜6）。集中講義やオンデマンドなど時限がないものは null',
+    '・room は教室名。読めない・書かれていない場合は空文字',
+    '・同じ講義が複数のコマにあれば、コマごとに1件ずつ出す',
+    '・講義名と教室以外（氏名、学籍番号、単位数、教員名など）は出力しない',
+    '・時間割の画像でない場合は [] を返す'
+  ].join('\n');
+  async function runOcr(file) {
+    if (!ocrApi || !file || !file.length) return;
+    ocr.status = 'busy';
+    ocr.msg = '';
+    ocr.ctl = new AbortController();
+    render();
+    try {
+      var data = await ocrApi.json(OCR_PROMPT + (file.length > 1 ? '\n・画像は' + file.length + '枚あります。全部の講義をまとめて1つの配列にしてください' : ''), { images: file, signal: ocr.ctl.signal, cache: false });
+      var rows = [];
+      (Array.isArray(data) ? data : []).slice(0, 60).forEach(function (r) {
+        if (!r || typeof r.name !== 'string' || !r.name.trim()) return;
+        var d = typeof r.day === 'string' ? DAY_NAMES[r.day.trim().charAt(0)] : (typeof r.day === 'number' ? r.day : undefined);
+        var pnum = Number(r.period);
+        rows.push({
+          on: true,
+          name: r.name.replace(/\s+/g, ' ').trim().slice(0, 40),
+          day: typeof d === 'number' && d >= 0 && d <= 6 ? d : -1,
+          period: pnum >= 1 && pnum <= 6 && Math.floor(pnum) === pnum ? pnum : 0,
+          room: typeof r.room === 'string' ? r.room.trim().slice(0, 20) : ''
+        });
+      });
+      if (!rows.length) { ocr.status = 'error'; ocr.msg = '講義を読み取れませんでした。時間割の部分がはっきり写った画像で試してください。'; }
+      else { ocr.status = 'review'; ocr.rows = rows; ocr.edit = null; }
+    } catch (e) {
+      var code = e && e.code;
+      ocr.status = 'error';
+      if (code === 'cancelled') { ocr.status = 'idle'; }
+      else if (code === 'not_granted' || code === 'sampling_disabled' || code === 'images_unavailable' || code === 'capability_disabled' || code === 'capability_removed' || code === 'not_declared') { ocr.msg = 'この画面では読み取りを使えません。'; ocrApi = null; }
+      else if (code === 'rate_limited') ocr.msg = '利用が混み合っています。少し時間をおいて試してください。';
+      else if (code === 'image_rejected') ocr.msg = 'この画像は使えません。PNGかJPEGの画像で試してください。';
+      else if (code === 'invalid_json' || code === 'refused' || code === 'empty_completion') ocr.msg = 'うまく読み取れませんでした。時間割の部分だけを切り取った画像で、もう一度試してください。';
+      else ocr.msg = '読み取りに失敗しました。もう一度試してください。';
+    }
+    ocr.ctl = null;
+    render();
+  }
+  // Name keys for matching a read class to one already registered: full-width/roman numerals (Ⅰ→I), case and spaces ignored.
+  function nameKey(n) { return (String.prototype.normalize ? n.normalize('NFKC') : n).toLowerCase().replace(/【[^】]*】/g, '').replace(/\s+/g, ''); }
+  function baseKey(n) { return nameKey(n.split(/\s\/\s|／/)[0]); }
+  function slotOfRow(r) { return r.day >= 1 && r.day <= 6 && r.period >= 1 ? r.day * 10 + r.period : 0; }
+  // The registered course a read row stands for, or null when it is new.
+  function matchCourse(r) {
+    if (!r.name) return null;
+    var fk = nameKey(r.name), bk = baseKey(r.name), v = slotOfRow(r), hit = null;
+    state.courses.forEach(function (c) { if (!hit && nameKey(c.name) === fk) hit = c; });
+    if (!hit) state.courses.forEach(function (c) { if (!hit && baseKey(c.name) === bk) hit = c; });
+    if (!hit && v) state.courses.forEach(function (c) {
+      if (hit || slotsOf(c).indexOf(v) < 0) return;
+      var ck = baseKey(c.name);
+      if (ck.length >= 2 && bk.length >= 2 && (ck.indexOf(bk) >= 0 || bk.indexOf(ck) >= 0)) hit = c;
+    });
+    return hit;
+  }
+  // 'new' | 'add' (known class, something new to add) | 'same' (already registered) | 'clash' (slot taken by another class)
+  function rowStatus(r) {
+    var c = matchCourse(r), v = slotOfRow(r);
+    if (v) {
+      var other = null;
+      state.courses.forEach(function (x) { if (!other && x !== c && slotsOf(x).indexOf(v) >= 0) other = x; });
+      if (other) return 'clash';
+    }
+    if (!c) return 'new';
+    if (v && slotsOf(c).indexOf(v) < 0) return 'add';
+    if (!v && r.day >= 0 && !hasOd(c) && !slotsOf(c).length) return 'add';
+    if (r.room && !c.r) return 'add';
+    if (r.name !== c.name) return 'add';
+    return 'same';
+  }
+  function applyOcr() {
+    var added = 0;
+    ocr.rows.forEach(function (r) {
+      if (!r.on || !r.name) return;
+      var st = rowStatus(r);
+      if (st === 'same' || st === 'clash') return;
+      var c = matchCourse(r);
+      // a known class keeps its records and settings, and takes the name as written on the timetable (UNIPA etc.)
+      if (c && r.name !== c.name) { c.n = r.name; c.name = r.name; }
+      if (!c) {
+        if (state.courses.length >= 30) return;
+        c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 6), n: r.name, name: r.name, a: ymd(todayDate()), col: freeColor(state.courses) };
+        state.courses.push(c);
+      }
+      if (r.day >= 1 && r.day <= 6 && r.period >= 1) {
+        var v = r.day * 10 + r.period;
+        var sl = (c.s || []).slice();
+        if (sl.indexOf(v) < 0) sl.push(v);
+        c.s = sl;
+      } else if (r.day >= 0 && !r.period && typeof c.od !== 'number') {
+        c.od = r.day;
+      }
+      if (r.room && !c.r) c.r = r.room;
+      added++;
+    });
+    ocr = { status: 'idle', rows: [], msg: added ? added + '件を時間割に入れました。' : '', ctl: null };
+    changed();
+    render();
+  }
+  function renderOcr() {
+    var box = $('ocr');
+    box.textContent = '';
+    if (!ocrApi && ocr.status !== 'error') { box.hidden = true; return; }
+    box.hidden = false;
+    if (ocr.status === 'busy') {
+      box.appendChild(h('p', { class: 'qt', text: '読み取り中…（30秒ほどかかることがあります）' }));
+      box.appendChild(h('button', { type: 'button', class: 'btn small', text: '中止', onclick: function () { if (ocr.ctl) ocr.ctl.abort(); } }));
+      return;
+    }
+    if (ocr.status === 'review') {
+      var on = ocr.rows.filter(function (r) { return r.on; });
+      var noSlot = [];
+      ocr.rows.forEach(function (r, k) { if (r.on && !(r.day >= 1 && r.period >= 1) && rowStatus(r) !== 'same') noSlot.push(k); });
+      var cnt = { 'new': 0, add: 0, same: 0, clash: 0 };
+      on.forEach(function (r) { cnt[rowStatus(r)]++; });
+      var todo = cnt['new'] + cnt.add;
+      box.appendChild(h('p', { class: 'qt', text: '読み取った講義 ' + on.length + '件' }));
+      var notes = [];
+      if (cnt['new']) notes.push('新しく入れる ' + cnt['new'] + '件');
+      if (cnt.add) notes.push('登録済みの講義を更新 ' + cnt.add + '件');
+      if (cnt.same) notes.push('登録済みでそのまま ' + cnt.same + '件');
+      if (cnt.clash) notes.push('別の講義が入っているコマ ' + cnt.clash + '件（追加しません）');
+      box.appendChild(h('p', { class: 'foot', text: notes.join('・') + '。登録済みの講義は、名前の書き方が少し違っても同じ講義として引き継ぎます。名前は読み取った方に変わり、記録や設定はそのまま残ります。新しいものは下の表に点線のコマで出ています。押すと直したり外したりできます。' }));
+      if (noSlot.length) {
+        box.appendChild(h('div', { class: 'slots' }, [h('span', { class: 'legend', text: '時限なし・曜日不明：' })].concat(noSlot.map(function (k) {
+          var r = ocr.rows[k];
+          return h('button', { type: 'button', class: 'slotchip candchip', onclick: function () { ocr.edit = k; render(); } }, [h('span', { text: r.name + (r.day >= 0 ? '（' + DAYS[r.day] + '）' : '') })]);
+        }))));
+      }
+      if (typeof ocr.edit === 'number' && ocr.rows[ocr.edit]) {
+        var r = ocr.rows[ocr.edit];
+        var nm = h('input', { type: 'text', maxlength: '40', value: r.name, 'aria-label': '講義名' });
+        nm.addEventListener('change', function () { r.name = nm.value.trim(); render(); });
+        var dsel = h('select', { 'aria-label': '曜日' }, [['-1', '曜日?'], ['1', '月'], ['2', '火'], ['3', '水'], ['4', '木'], ['5', '金'], ['6', '土'], ['0', '日']].map(function (o) { return h('option', { value: o[0], text: o[1] }); }));
+        dsel.value = String(r.day);
+        dsel.addEventListener('change', function () { r.day = Number(dsel.value); render(); });
+        var psel = h('select', { 'aria-label': '時限' }, [['0', '時限なし'], ['1', '1限'], ['2', '2限'], ['3', '3限'], ['4', '4限'], ['5', '5限'], ['6', '6限']].map(function (o) { return h('option', { value: o[0], text: o[1] }); }));
+        psel.value = String(r.period);
+        psel.addEventListener('change', function () { r.period = Number(psel.value); render(); });
+        var rm = h('input', { type: 'text', maxlength: '20', value: r.room, placeholder: '教室', 'aria-label': '教室' });
+        rm.addEventListener('change', function () { r.room = rm.value.trim(); render(); });
+        box.appendChild(h('div', { class: 'candedit' }, [
+          nm,
+          h('div', { class: 'row' }, [dsel, psel, rm]),
+          h('div', { class: 'row' }, [
+            h('button', { type: 'button', class: 'btn small', text: '閉じる', onclick: function () { ocr.edit = null; render(); } }),
+            h('button', { type: 'button', class: 'link danger', text: 'この講義を外す', onclick: function () { r.on = false; ocr.edit = null; render(); } })
+          ])
+        ]));
+      }
+      box.appendChild(h('div', { class: 'row' }, [
+        todo ? h('button', { type: 'button', class: 'btn primary', text: todo + '件を登録', onclick: applyOcr }) : h('span', { class: 'foot', text: '新しく入れるものはありません。' }),
+        h('button', { type: 'button', class: 'link', text: 'やめる', onclick: function () { ocr = { status: 'idle', rows: [], msg: '', ctl: null }; render(); } })
+      ]));
+      return;
+    }
+    var fin = h('input', { type: 'file', id: 'ocrfile', accept: ocr.accept || 'image/png,image/jpeg,image/webp', multiple: '', hidden: '' });
+    fin.addEventListener('change', function () {
+      var fs = fin.files ? Array.prototype.slice.call(fin.files, 0, Math.min(3, ocr.maxCount || 3)) : [];
+      if (fs.length) runOcr(fs);
+    });
+    var old1 = $('ocrfirst');
+    if (old1) old1.remove();
+    if (!state.courses.length && !ocr.msg) {
+      // first run: the screenshot is the main way in, so its button sits in the welcome block
+      box.hidden = true;
+      var acts = $('emptyacts');
+      acts.insertBefore(h('span', { id: 'ocrfirst', style: 'display:contents' }, [h('button', { type: 'button', class: 'btn primary', text: 'スクショから登録', onclick: function () { fin.click(); } }), fin]), acts.firstChild);
+      return;
+    }
+    box.appendChild(h('div', { class: 'ocrhead' }, [
+      h('div', { class: 'ptitle' }, [h('b', { text: 'スクショから時間割を登録' }), h('small', { text: 'UNIPAなどの時間割の画像を読み取ります（一度に3枚まで）。名前や学籍番号が写らないよう、表の部分だけを切り取るのがおすすめです。' })]),
+      h('button', { type: 'button', class: 'btn primary', text: '画像を選ぶ', onclick: function () { fin.click(); } }),
+      fin
+    ]));
+    if (ocr.msg) box.appendChild(h('p', { class: ocr.status === 'error' ? 'msg' : 'swnote', text: ocr.msg }));
+  }
+
+  function renderCourses() {
+    renderOcr();
+    renderTable();
+    var has = state.courses.length > 0;
+    $('empty').hidden = has;
+    $('emptytxt').textContent = ocrApi ? 'いちばん早いのは、UNIPAなどの時間割のスクショから読み取る方法です。手で入れるときは、下の表の「＋」を押します。動きを見たいだけなら、例を入れて試せます（あとで削除できます）。' : '下の表の「＋」を押して、講義を入れます。動きを見たいだけなら、例を入れて試せます（あとで削除できます）。';
+    var list = $('clist');
+    list.hidden = !has;
+    list.textContent = '';
+    // Keep the order fixed while a course's slot grid is open, so rows don't jump on each tap.
+    var order = sortedCourses();
+    if (ui.tt) {
+      if (!ui.order) ui.order = order.map(function (c) { return c.id; });
+      var fixed = ui.order.map(courseById).filter(Boolean);
+      order.forEach(function (c) { if (fixed.indexOf(c) < 0) fixed.push(c); });
+      order = fixed;
+    } else {
+      ui.order = null;
+    }
+    order.forEach(function (c) {
+      var openN = state.items.filter(function (i) { return i.c === c.id && !i.x; }).length;
+      var totalN = state.items.filter(function (i) { return i.c === c.id; }).length;
+      var ctl = [];
+      var tl = hasSchedule(c) ? '曜日・時限：' + slotLabel(c) : '曜日・時限を選ぶ';
+      ctl.push(h('button', { type: 'button', class: 'link', text: ui.tt === c.id ? '閉じる' : tl, 'aria-expanded': ui.tt === c.id ? 'true' : 'false', onclick: function () { ui.tt = ui.tt === c.id ? null : c.id; render(); } }));
+      var ask = h('input', { type: 'checkbox', id: 'ask-' + c.id });
+      ask.checked = c.q !== 0;
+      ask.addEventListener('change', function () { toggleAsk(c.id); });
+      ctl.push(h('label', { class: 'askl', for: 'ask-' + c.id }, [ask, h('span', { text: '講義後チェックで聞く' })]));
+      ctl.push(h('button', { type: 'button', class: 'link', text: '名前を変更', 'aria-label': c.name + ' の名前を変更', onclick: function () { ui.renaming = c.id; ui.confirmCourse = null; render(); var r = $('rn-' + c.id); if (r) { r.focus(); r.select(); } } }));
+      if (ui.confirmCourse === c.id) {
+        ctl.push(h('button', { type: 'button', class: 'link danger', text: 'この講義と' + totalN + '件を削除する', onclick: function () { removeCourse(c.id); } }));
+        ctl.push(h('button', { type: 'button', class: 'link', text: 'やめる', onclick: function () { ui.confirmCourse = null; render(); } }));
+      } else {
+        ctl.push(h('button', { type: 'button', class: 'link', text: '削除', 'aria-label': c.name + ' を削除', onclick: function () { ui.confirmCourse = c.id; render(); } }));
+      }
+      var nameEl;
+      if (ui.renaming === c.id) {
+        var rin = h('input', { type: 'text', id: 'rn-' + c.id, maxlength: '40', 'aria-label': '新しい講義名' });
+        rin.value = c.name;
+        var rmsg = h('span', { class: 'msg', role: 'status' });
+        var save = function (e) {
+          if (e) e.preventDefault();
+          var v = rin.value.replace(/\s+/g, ' ').trim();
+          if (!v) { rmsg.textContent = '講義名を入力してください。'; return; }
+          if (state.courses.some(function (o) { return o.id !== c.id && o.name.toLowerCase() === v.toLowerCase(); })) { rmsg.textContent = '同じ名前の講義がすでにあります。'; return; }
+          c.n = v; c.name = v;
+          ui.renaming = null;
+          changed();
+          render();
+        };
+        nameEl = h('form', { class: 'cform', style: 'flex-basis:100%', onsubmit: save }, [
+          rin,
+          h('button', { type: 'submit', class: 'btn small', text: '保存' }),
+          h('button', { type: 'button', class: 'btn small', text: 'やめる', onclick: function () { ui.renaming = null; render(); } }),
+          rmsg
+        ]);
+      } else {
+        nameEl = h('span', { class: 'cn', text: c.name });
+      }
+      var kids = [
+        nameEl,
+        h('span', { class: 'co', text: '残り ' + openN + ' 件' }),
+        h('div', { class: 'cc' }, ctl)
+      ];
+      if (ui.tt === c.id) kids.push(ttGrid(c));
+      list.appendChild(h('li', { class: 'course' }, kids));
+    });
+  }
+
+  function renderStats(today) {
+    var open = state.items.filter(function (i) { return !i.x; });
+    var el = $('stats');
+    el.textContent = (today.getMonth() + 1) + '月' + today.getDate() + '日 ' + DAYS[today.getDay()] + '曜日' + (state.courses.length ? '　未完 ' + open.length + '件' : '');
+  }
+
+  function renderToast() {
+    var t = $('toast');
+    if (!ui.toast) { t.hidden = true; t.textContent = ''; return; }
+    t.hidden = false;
+    t.className = 'toast';
+    t.textContent = '';
+    t.setAttribute('role', 'status');
+    t.appendChild(h('span', { text: ui.toast.text }));
+    if (ui.toast.id) {
+      var id = ui.toast.id;
+      t.appendChild(h('button', { type: 'button', class: 'undo', text: '元に戻す', onclick: function () { setDone(id, false); } }));
+    }
+    // hide by itself after a few seconds
+    var mine = ui.toast;
+    if (!mine.timer) mine.timer = setTimeout(function () { if (ui.toast === mine) { ui.toast = null; renderToast(); } }, 6000);
+  }
+
+  function renderQuick() {
+    var q = $('quick');
+    if (q.childNodes.length) return;
+    [['今日', 0], ['明日', 1], ['1週間後', 7], ['期限なし', null]].forEach(function (p) {
+      q.appendChild(h('button', { type: 'button', class: 'btn small', text: p[0], onclick: function () {
+        $('f-due').value = p[1] === null ? '' : ymd(addDays(new Date(), p[1]));
+        if (p[1] === null) { $('f-time').value = ''; showTime(false); }
+      } }));
+    });
+  }
+
+  function sessionStatus(day, cid) {
+    var v = (state.cc[ymd(day)] || {})[cid];
+    if (v === 3) return { t: '休講', cls: '' };
+    if (v === 2) return { t: 'スキップ', cls: '' };
+    if (v && typeof v === 'object' && (v.a === 'u' || v.q === 'u')) return { t: 'わからないあり', cls: 'warn' };
+    if (v) return { t: 'チェック済', cls: 'good' };
+    return { t: '未チェック', cls: 'warn' };
+  }
+  function renderOlder() {
+    var box = $('older');
+    var all = pastSessions();
+    var todo = olderSessions();
+    box.hidden = !all.length;
+    if (!all.length) { ui.confirmSkip = false; return; }
+    setPanelTitle($('oldersum'), '以前の講義後チェック', todo.length, todo.length ? 'まだ回答していない講義があります（過去1週間）' : '過去1週間の講義をやり直せます');
+    var body = $('olderbody');
+    body.textContent = '';
+    var rows = [];
+    var lastKey = '';
+    all.forEach(function (x) {
+      var key = ymd(x.day);
+      var c = courseById(x.id);
+      if (!c) return;
+      if (key !== lastKey) { rows.push(h('li', { class: 'odate', text: fmt(x.day) })); lastKey = key; }
+      var st = sessionStatus(x.day, x.id);
+      var p = periodOf(c, wdOf(x.day));
+      rows.push(h('li', { class: 'orow' }, [
+        h('button', { type: 'button', class: 'ob', onclick: function () { openCheckin([x], true); } }, [
+          h('span', { class: 'on' }, [h('i', { class: 'cdot', 'aria-hidden': 'true', style: 'background:' + courseColor(c.id) }), c.name + (p ? '（' + p + '限）' : '')]),
+          h('span', { class: 'os ' + st.cls, text: st.t }),
+          h('span', { class: 'oe', 'aria-hidden': 'true', text: st.t === '未チェック' ? 'チェック' : '直す' })
+        ])
+      ]));
+    });
+    body.appendChild(h('ul', { class: 'olist' }, rows));
+    if (todo.length) {
+      var kids = [h('button', { type: 'button', class: 'link', text: '未チェック ' + todo.length + ' 件を続けてチェック', onclick: function () { openCheckin(todo, true); } })];
+      if (ui.confirmSkip) {
+        kids.push(h('button', { type: 'button', class: 'link danger', text: todo.length + ' 件を飛ばす', onclick: function () {
+          skipSessions(todo);
+          ui.confirmSkip = false;
+          changed();
+          render();
+        } }));
+        kids.push(h('button', { type: 'button', class: 'link', text: 'やめる', onclick: function () { ui.confirmSkip = false; render(); } }));
+      } else {
+        kids.push(h('button', { type: 'button', class: 'link', text: 'まとめて飛ばす', onclick: function () { ui.confirmSkip = true; render(); } }));
+      }
+      body.appendChild(h('div', { class: 'acts oacts' }, kids));
+    }
+  }
+
+  // "Next thing to do": the check-in first, then an overdue item, then the nearest deadline (today/tomorrow).
+  function renderBanner(today, settings) {
+    var b = $('banner');
+    b.textContent = '';
+    if (ui.ci || settings) { b.hidden = true; return; }
+    b.hidden = false;
+    b.className = 'hero';
+    var hasTT = state.courses.some(function (c) { return hasSchedule(c); });
+    var manual = hasTT ? h('button', { type: 'button', class: 'hlink', text: '講義後チェックを開く', onclick: function () { startCheckin(false); } }) : null;
+    var ps = pendingSession();
+    var uns = unsureList();
+    // Priority of the banner: 1) unanswered check-in, 2) 確認待ち, 3) overdue / today / tomorrow deadline, 4) calm.
+    // When 1) or 2) holds the banner, overdue and due-today items are still named in one line so they are not missed.
+    var urgent = { over: 0, today: 0 };
+    state.items.forEach(function (i) { if (i.x) return; var bb = dueInfo(i, today).b; if (bb === 0) urgent.over++; else if (bb === 1) urgent.today++; });
+    var urgentLine = function () {
+      if (!urgent.over && !urgent.today) return null;
+      var t = [];
+      if (urgent.over) t.push('期限切れ ' + urgent.over + '件');
+      if (urgent.today) t.push('今日締切 ' + urgent.today + '件');
+      return h('button', { type: 'button', class: 'hurgent', onclick: function () { var o = $('open'); if (o) try { o.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { /* ignore */ } } }, [h('b', { text: '！' }), h('span', { text: t.join('・') + 'があります（下の一覧）' })]);
+    };
+    if (ps) {
+      var day = ps.day, wd = wdOf(day);
+      var isToday = ymd(day) === ymd(today);
+      b.appendChild(h('span', { class: 'hl', text: '次にやること' }));
+      b.appendChild(h('span', { class: 'hb', text: (isToday ? '' : fmt(day) + 'の') + '講義後チェック' }));
+      b.appendChild(h('span', { class: 'hs', text: ps.list.map(function (c) { return cellName(c.name); }).join('・') + ' の' + ps.list.length + '講義' }));
+      b.appendChild(h('div', { class: 'hrow' }, [
+        h('button', { type: 'button', class: 'hbtn', text: 'はじめる', onclick: function () { startCheckin(true); } }),
+        uns.length ? h('button', { type: 'button', class: 'hlink', text: '確認待ち ' + uns.length + ' 件', onclick: function () { openResolve(uns[0]); } }) : null
+      ]));
+      var ul1 = urgentLine();
+      if (ul1) b.appendChild(ul1);
+      return;
+    }
+    if (uns.length) {
+      var u0 = uns[0];
+      b.appendChild(h('span', { class: 'hl', text: '確認待ち' + (uns.length > 1 ? '（' + uns.length + '件）' : '') }));
+      b.appendChild(h('span', { class: 'hb', text: cellName(u0.c.name) + 'の' + unsureWhat(u0.r) + 'を確認' }));
+      b.appendChild(h('span', { class: 'hs', text: fmt(u0.day) + 'に「わからない」と答えた分。' + (u0.nx ? '次の講義（' + fmt(u0.nx) + (u0.tm ? ' ' + u0.tm : '') + '）までに確認' : '') }));
+      b.appendChild(h('div', { class: 'hrow' }, [h('button', { type: 'button', class: 'hbtn', text: '答える', onclick: function () { openResolve(u0); } }), manual]));
+      var ul2 = urgentLine();
+      if (ul2) b.appendChild(ul2);
+      return;
+    }
+    var open = state.items.filter(function (i) { return !i.x; }).map(function (it) { return { it: it, info: dueInfo(it, today) }; });
+    open.sort(function (a, c) {
+      if (a.info.b !== c.info.b) return a.info.b - c.info.b;
+      if (a.it.d !== c.it.d) return a.it.d < c.it.d ? -1 : 1;
+      return (a.it.tm || '24:00') < (c.it.tm || '24:00') ? -1 : 1;
+    });
+    var top = open.filter(function (r) { return r.info.b <= 1 || r.info.diff === 1; })[0];
+    if (top) {
+      var it = top.it, over = top.info.b === 0;
+      b.appendChild(h('span', { class: 'hl', text: over ? '期限が過ぎています' : '次の締切' }));
+      b.appendChild(h('span', { class: 'hb', text: it.t }));
+      b.appendChild(h('span', { class: 'hs', text: cellName(courseName(it.c)) + '・' + top.info.label }));
+      var row = [h('button', { type: 'button', class: 'hbtn', text: '完了にする', onclick: function () { setDone(it.id, true); } })];
+      if (over) row.push(h('button', { type: 'button', class: 'hlink', text: 'できなかった', onclick: function () { setMissed(it.id); } }));
+      row.push(manual);
+      b.appendChild(h('div', { class: 'hrow' }, row));
+      return;
+    }
+    b.className = 'hero calm';
+    if (!state.courses.length) { b.hidden = true; return; }
+    var nextDue = open.filter(function (r) { return r.it.d; })[0];
+    if (open.length) {
+      b.appendChild(h('span', { class: 'hb', text: '今日・明日が締切のものはありません' }));
+      b.appendChild(h('span', { class: 'hs', text: (nextDue ? '次の締切：' + cellName(courseName(nextDue.it.c)) + '「' + nextDue.it.t + '」' + nextDue.info.label + '。' : '') + '残り ' + open.length + ' 件は下の一覧にあります。' }));
+    } else {
+      b.appendChild(h('span', { class: 'hb', text: '今日やることはありません' }));
+      b.appendChild(h('span', { class: 'hs', text: '残っている課題はありません。講義が終わったら、講義後チェックで課題を記録します。' }));
+    }
+    if (manual) b.appendChild(h('div', { class: 'hrow' }, [manual]));
+  }
+
+  // Pick a date, then which weekday's timetable runs that day (or no classes).
+  function swEditor(today) {
+    state.sw = state.sw || {};
+    var key = ui.swDate || ymd(today);
+    var cur = state.sw[key];
+    var din = h('input', { type: 'date', id: 'swdate', value: key, 'aria-label': '変更する日' });
+    din.addEventListener('change', function () { if (din.value) { ui.swDate = din.value; render(); } });
+    var natural = DAYS[parse(key).getDay()];
+    var opts = [['n', '通常（' + natural + '曜）']].concat([1, 2, 3, 4, 5, 6].map(function (w) { return [w, DAYS[w] + '曜']; }), [[-1, '休み']]);
+    var row = h('div', { class: 'swopts' }, opts.map(function (o) {
+      var on = o[0] === 'n' ? typeof cur !== 'number' : cur === o[0];
+      return h('button', { type: 'button', class: 'opt' + (on ? ' on' : ''), 'aria-pressed': on ? 'true' : 'false', text: o[1], onclick: function () {
+        if (o[0] === 'n' || o[0] === parse(key).getDay()) delete state.sw[key]; else state.sw[key] = o[0];
+        changed();
+        render();
+      } });
+    }));
+    var keys = Object.keys(state.sw).filter(function (k) { return k >= ymd(addDays(today, -7)); }).sort();
+    var list = keys.length ? h('ul', { class: 'swlist' }, keys.map(function (k) {
+      var v = state.sw[k];
+      return h('li', null, [
+        h('span', { text: fmt(parse(k)) + '　→　' + (v < 0 ? '休み' : DAYS[v] + '曜の時間割') }),
+        h('button', { type: 'button', class: 'slotx', 'aria-label': fmt(parse(k)) + 'の変更を取り消す', text: '×', onclick: function () { delete state.sw[k]; changed(); render(); } })
+      ]);
+    })) : null;
+    return h('div', { class: 'sheet swbox' }, [
+      h('p', { class: 'qt', text: '授業日の変更（振替・休み）' }),
+      h('div', { class: 'row' }, [h('span', { class: 'legend', text: '日付' }), din]),
+      h('span', { class: 'legend', text: 'その日に動く時間割' }),
+      row,
+      list,
+      h('button', { type: 'button', class: 'link', text: '閉じる', onclick: function () { ui.swOpen = false; render(); } })
+    ]);
+  }
+  function appendPastLink(box) {
+    var ps = pendingSession();
+    var shown = ps ? ymd(ps.day) : '';
+    var n = olderSessions().filter(function (x) { return ymd(x.day) !== shown; }).length;
+    if (!n) return;
+    box.appendChild(h('button', { type: 'button', class: 'pastlink', onclick: function () {
+      var p = $('older');
+      p.open = true;
+      try { p.scrollIntoView({ block: 'start', behavior: 'smooth' }); } catch (e) { p.scrollIntoView(); }
+    } }, [h('span', { text: 'まだチェックしていない以前の講義 ' + n + '件' }), h('span', { 'aria-hidden': 'true', text: '›' })]));
+  }
+  function renderToday(today) {
+    var box = $('today');
+    box.textContent = '';
+    if (!state.courses.length) { box.hidden = true; return; }
+    var list = todaysClasses(today);
+    box.hidden = false;
+    box.appendChild(h('div', { class: 'shrow' }, [
+      h('h2', { class: 'sh', id: 'today-h', text: '今日の講義' }),
+      h('button', { type: 'button', class: 'link', 'aria-expanded': ui.swOpen ? 'true' : 'false', text: '授業日の変更', onclick: function () { ui.swOpen = !ui.swOpen; ui.swDate = ui.swDate || ymd(today); render(); } })
+    ]));
+    var swv = state.sw && state.sw[ymd(today)];
+    if (typeof swv === 'number') box.appendChild(h('p', { class: 'swnote', text: swv < 0 ? '今日は休み（授業日の変更）' : '今日は' + DAYS[swv] + '曜の時間割（授業日の変更）' }));
+    if (ui.swOpen) box.appendChild(swEditor(today));
+    if (!list.length) { box.appendChild(h('p', { class: 'tnone', text: '今日は講義がありません。' })); appendPastLink(box); return; }
+    var wd = wdOf(today);
+    var cc = state.cc[ymd(today)] || {};
+    var nextMarked = false;
+    var cells = list.map(function (c) {
+      var p = periodOf(c, wd);
+      var st, cls = '', next = false;
+      if (cc[c.id] === 3) { st = '休講'; }
+      else if (cc[c.id] === 2) { st = 'スキップ'; }
+      else if (cc[c.id]) { st = 'チェック済'; cls = 'good'; }
+      else if (hasEnded(c, today)) { st = '未チェック'; cls = 'warn'; }
+      else if (!nextMarked) { st = '次の講義'; next = true; nextMarked = true; }
+      else { st = 'これから'; }
+      var startT = p ? startTimeOf(c, wd) : '';
+      var tp = p ? p + '限' + (next || st === 'これから' ? ' ' + startT : '') : '時限なし';
+      var openN = state.items.filter(function (i) { return i.c === c.id && !i.x; }).length;
+      return h('div', { class: 'tcell' + (next ? ' next' : '') }, [
+        h('div', { class: 'thead' }, [h('span', { class: 'tp', text: tp }), h('span', { class: 'ts ' + cls, text: st })]),
+        h('span', { class: 'tn' }, [h('i', { 'aria-hidden': 'true', style: 'background:' + courseColor(c.id) }), cellName(c.name)]),
+        c.r ? h('span', { class: 'tr', text: c.r }) : null,
+        openN ? h('span', { class: 'tk', text: '課題など ' + openN + '件' }) : null
+      ]);
+    });
+    box.appendChild(h('div', { class: 'tgrid' }, cells));
+    appendPastLink(box);
+  }
+
+  function renderCheckin(today) {
+    var box = $('checkin');
+    box.hidden = !ui.ci;
+    box.textContent = '';
+    if (!ui.ci) return;
+    var ci = ui.ci;
+
+    if (ci.done) {
+      var s = ci.sum;
+      var lines = [];
+      if (s.a) lines.push('課題を ' + s.a + ' 件');
+      if (s.q) lines.push('小テストを ' + s.q + ' 件');
+      if (s.r) lines.push('復習を ' + s.r + ' 件');
+      var h2 = h('h2', { tabindex: '-1', text: 'チェックが終わりました' });
+      box.appendChild(h2);
+      box.appendChild(h('ul', { class: 'sum' }, [
+        h('li', { text: lines.length ? lines.join('、') + '、登録しました。' : '登録したものはありません。' }),
+        s.u ? h('li', { text: '「わからない」が ' + s.u + ' 件あります。課題と小テストの分は、次の講義までトップに「確認待ち」として出ます。' }) : null,
+        s.x ? h('li', { text: '休講：' + s.x + ' 講義' + (s.ext ? '（期限を1週間延ばした項目 ' + s.ext + ' 件）' : '') }) : null
+      ]));
+      box.appendChild(h('div', { class: 'nav' }, [h('button', { type: 'button', class: 'btn primary', text: '閉じる', onclick: closeCheckin })]));
+      h2.focus();
+      return;
+    }
+
+    var c = courseById(ci.ids[ci.i]);
+    if (!c) { ci.done = true; renderCheckin(today); return; }
+    var a = ci.ans;
+    var last = ci.i + 1 >= ci.ids.length;
+    var day = ci.day;
+    var wd = wdOf(day);
+    var isToday = ymd(day) === ymd(today);
+
+    function opt(val, label, cur, pick) {
+      return h('button', { type: 'button', class: 'opt' + (cur === val ? ' on' : ''), 'aria-pressed': cur === val ? 'true' : 'false', text: label, onclick: function () { pick(val); } });
+    }
+    function yn(key, label, labels) {
+      var row = h('div', { class: 'opts', role: 'group', 'aria-label': label }, labels.map(function (p) {
+        return opt(p[0], p[1], a[key], function (v) { a[key] = v; ci.msg = ''; render(); });
+      }));
+      return [h('div', { class: 'qt', text: label }), row];
+    }
+    function dueChoice(key) {
+      var modeKey = key + 'Mode', dateKey = key + 'Date', timeKey = key + 'Time', openKey = key + 'TimeOpen';
+      var nx = nextClassDate(c, today);
+      var opts = [];
+      if (nx) opts.push(opt('next', '次の講義 ' + fmt(nx), a[modeKey], function (v) { a[modeKey] = v; render(); }));
+      opts.push(opt('date', '日付を選ぶ', a[modeKey], function (v) { a[modeKey] = v; render(); }));
+      opts.push(opt('none', '期限は不明', a[modeKey], function (v) { a[modeKey] = v; render(); }));
+      var kids = [h('div', { class: 'qs', text: '期限' }), h('div', { class: 'opts', role: 'group', 'aria-label': '期限' }, opts)];
+      if (a[modeKey] === 'date') {
+        var inp = h('input', { type: 'date', 'aria-label': '期限の日付' });
+        inp.value = a[dateKey] || '';
+        inp.addEventListener('change', function () { a[dateKey] = inp.value; });
+        var quick = [['明日', 1], ['1週間後', 7]].map(function (p) {
+          return h('button', { type: 'button', class: 'btn small', text: p[0], onclick: function () {
+            a[dateKey] = ymd(addDays(today, p[1]));
+            inp.value = a[dateKey];
+          } });
+        });
+        kids.push(h('div', { class: 'row' }, [inp].concat(quick)));
+      }
+      // The time is optional and stays folded away until asked for.
+      if (a[modeKey] === 'next' || a[modeKey] === 'date') {
+        if (a[timeKey] || a[openKey]) {
+          var tin = h('input', { type: 'time', 'aria-label': '締切の時刻' });
+          tin.value = a[timeKey] || '';
+          tin.addEventListener('change', function () { a[timeKey] = tin.value; });
+          kids.push(h('div', { class: 'row' }, [
+            tin,
+            h('button', { type: 'button', class: 'btn small', text: '23:59', onclick: function () { a[timeKey] = '23:59'; tin.value = '23:59'; } }),
+            h('button', { type: 'button', class: 'link', text: '時刻を消す', onclick: function () { a[timeKey] = ''; a[openKey] = false; render(); } })
+          ]));
+        } else {
+          kids.push(h('button', { type: 'button', class: 'link', text: '＋ 時刻も指定する', onclick: function () { a[openKey] = true; render(); } }));
+        }
+      }
+      return kids;
+    }
+
+    var pnum = periodOf(c, wd);
+    var swLink = h('button', { type: 'button', class: 'link', text: '授業日の変更', onclick: function () {
+      ui.swDate = ymd(day);
+      ui.swOpen = true;
+      ui.ci = null;
+      render();
+      window.scrollTo(0, 0);
+    } });
+    var ti = c.name.indexOf(' / ');
+    var theme = ti > 0 ? c.name.slice(ti + 3) : '';
+    var title = h('div', { class: 'cihead' }, [
+      h('h2', { tabindex: '-1', text: (ti > 0 ? c.name.slice(0, ti) : c.name) + (pnum ? '・' + pnum + '限' : '') }),
+      h('span', { class: 'step', text: (theme ? theme + '　' : '') + (isToday ? '今日' : fmt(day)) + 'の講義　' + (ci.i + 1) + ' / ' + ci.ids.length })
+    ]);
+    box.appendChild(title);
+
+    if (ci.cancel) {
+      var n = ci.cancel.ids.length;
+      box.appendChild(h('p', { class: 'qt', text: 'この講義の、' + (isToday ? '今日' : fmt(day)) + 'が期限の項目が ' + n + ' 件あります。期限を1週間延ばしますか？' }));
+      box.appendChild(h('ul', { class: 'sum' }, ci.cancel.ids.map(function (id) { var it = findItem(id); return it ? h('li', { text: it.t }) : null; })));
+      box.appendChild(h('div', { class: 'nav' }, [
+        h('button', { type: 'button', class: 'btn primary', text: '1週間延ばす', onclick: function () { extendCancelled(true); } }),
+        h('button', { type: 'button', class: 'btn', text: 'そのまま', onclick: function () { extendCancelled(false); } })
+      ]));
+      return;
+    }
+
+    // ---- card flow: one question per card ----
+    var nextLabel = last ? '完了' : '次の講義へ';
+    function stepsOf() {
+      var s = ['a'];
+      if (a.a === 'y') s.push('atype', 'adue', 'amore');
+      s.push('q');
+      if (a.q === 'y') s.push('qdue');
+      s.push('r');
+      if (a.r === 'y') s.push('rdue');
+      s.push('confirm');
+      return s;
+    }
+    if (!ci.step) ci.step = a.prev ? 'confirm' : 'a';
+    var YNx = ci.resolve ? [['y', 'あった'], ['n', 'なかった']] : null;
+    var steps = stepsOf();
+    if (steps.indexOf(ci.step) < 0) ci.step = 'confirm';
+    function go(step) { ci.step = step; ci.msg = ''; render(); var f = $('checkin').querySelector('.card-q'); if (f) f.focus(); }
+    function advance() {
+      var s = stepsOf();
+      var i = s.indexOf(ci.step);
+      var nxt = s[Math.min(i + 1, s.length - 1)];
+      // editing from the confirm card: go through this question's follow-ups, then return to it
+      if (ci.editing && (nxt === 'q' || nxt === 'r' || nxt === 'confirm')) { ci.editing = false; nxt = 'confirm'; }
+      // confirming a 「わからない」: ask only what was unknown, then the summary
+      if (ci.resolve && ((nxt === 'q' && !ci.uq) || nxt === 'r')) nxt = 'confirm';
+      go(nxt);
+    }
+    function back() {
+      var s = stepsOf();
+      var i = s.indexOf(ci.step);
+      if (i > 0) go(s[i - 1]);
+    }
+    // rec: the likely answer, outlined (not filled) until actually chosen
+    function choices(list, cur, pick, rec) {
+      return h('div', { class: 'opts card-opts', role: 'group' }, list.map(function (p) {
+        return h('button', { type: 'button', class: 'opt' + (cur === p[0] ? ' on' : (rec === p[0] && !cur ? ' rec' : '')), 'aria-pressed': cur === p[0] ? 'true' : 'false', text: p[1], onclick: function () { pick(p[0]); } });
+      }));
+    }
+    function question(text) { return h('p', { class: 'card-q', tabindex: '-1', text: text }); }
+    function dueText(key) {
+      var mode = a[key + 'Mode'];
+      var t = a[key + 'Time'] ? ' ' + a[key + 'Time'] : '';
+      if (mode === 'next') { var nx = nextClassDate(c, today); return nx ? '次の講義 ' + fmt(nx) + t : '期限は不明'; }
+      if (mode === 'date') return a[key + 'Date'] ? fmt(parse(a[key + 'Date'])) + t : '日付が未入力';
+      return '期限は不明';
+    }
+    var YN = [['y', 'ある'], ['n', 'ない'], ['u', 'わからない']];
+    var RN = [['y', '必要'], ['n', '不要']];
+    var LABEL = { y: 'ある', n: 'ない', u: 'わからない' };
+    var RLABEL = { y: '必要', n: '不要', u: '未回答' };
+    var card = h('div', { class: 'card' });
+    var foot = [];
+
+    function dueCard(key, q) {
+      var modeKey = key + 'Mode', dateKey = key + 'Date', timeKey = key + 'Time', openKey = key + 'TimeOpen';
+      var nx = nextClassDate(c, today);
+      var timeOn = !!(a[timeKey] || a[openKey]);
+      card.appendChild(question(q));
+      var list = [];
+      if (nx) list.push(['next', '次の講義 ' + fmt(nx)]);
+      list.push(['date', '日付を選ぶ'], ['none', '期限は不明']);
+      card.appendChild(choices(list, a[modeKey], function (v) {
+        a[modeKey] = v;
+        if (v === 'none') { a[timeKey] = ''; a[openKey] = false; }
+        if (v !== 'date' && !timeOn) advance(); else render();
+      }, 'next'));
+      if (a[modeKey] === 'date') {
+        var inp = h('input', { type: 'date', 'aria-label': '期限の日付' });
+        inp.value = a[dateKey] || '';
+        inp.addEventListener('change', function () { a[dateKey] = inp.value; render(); });
+        card.appendChild(h('div', { class: 'row' }, [inp].concat([['明日', 1], ['1週間後', 7]].map(function (p) {
+          return h('button', { type: 'button', class: 'btn small', text: p[0], onclick: function () { a[dateKey] = ymd(addDays(today, p[1])); render(); } });
+        }))));
+      }
+      if (a[modeKey] !== 'none') {
+        if (timeOn) {
+          var tin = h('input', { type: 'time', 'aria-label': '締切の時刻' });
+          tin.value = a[timeKey] || '';
+          tin.addEventListener('change', function () { a[timeKey] = tin.value; });
+          card.appendChild(h('div', { class: 'row' }, [
+            tin,
+            h('button', { type: 'button', class: 'btn small', text: '23:59', onclick: function () { a[timeKey] = '23:59'; tin.value = '23:59'; } }),
+            h('button', { type: 'button', class: 'link', text: '時刻を消す', onclick: function () { a[timeKey] = ''; a[openKey] = false; render(); } })
+          ]));
+        } else {
+          card.appendChild(h('button', { type: 'button', class: 'link card-link', text: '＋ 時刻も指定する', onclick: function () { a[openKey] = true; render(); } }));
+        }
+      }
+      if (a[modeKey] === 'date' || timeOn) {
+        var ok = a[modeKey] !== 'date' || !!a[dateKey];
+        var nb = h('button', { type: 'button', class: 'btn primary', text: '次へ', onclick: function () { if (ok) advance(); } });
+        if (!ok) nb.setAttribute('disabled', '');
+        foot.push(nb);
+      }
+    }
+
+    var st = ci.step;
+    if (st === 'a') {
+      card.appendChild(question(ci.resolve ? '課題はあった？' : '次の講義までの課題は？'));
+      if (!ci.editing && !ci.resolve) {
+        var quick = [];
+        var pr = prevRecord(c.id, day);
+        if (pr) {
+          quick.push(h('button', { type: 'button', class: 'quickbtn', onclick: function () {
+            var r = pr.r, shift = diffDays(day, parse(pr.k));
+            ANS_KEYS.forEach(function (k) { a[k] = r[k] || ''; });
+            a.al = (r.al || []).map(normExtra);
+            // a fixed date from last time moves forward by the same gap
+            var mv = function (o, mk, dk) { if (o[mk] === 'date' && o[dk]) o[dk] = ymd(addDays(parse(o[dk]), shift)); };
+            mv(a, 'aMode', 'aDate'); mv(a, 'qMode', 'qDate'); mv(a, 'rMode', 'rDate');
+            a.al.forEach(function (x) { mv(x, 'aMode', 'aDate'); });
+            a.copied = true;
+            go('confirm');
+          } }, [h('b', { text: '前回（' + fmt(parse(pr.k)) + '）と同じ' }), h('span', { text: describeRec(pr.r) })]));
+        }
+        if (c.w) {
+          var wk = c.w;
+          quick.push(h('button', { type: 'button', class: 'quickbtn', onclick: function () {
+            a.a = 'y'; a.type = wk.t || ''; a.note = wk.n || ''; a.aMode = 'next'; a.aDate = ''; a.aTime = wk.tm || '';
+            go('q');
+          } }, [h('b', { text: '毎週の課題を入れる' }), h('span', { text: (wk.t || '課題') + (wk.n ? '：' + wk.n : '') + '・次の講義まで' + (wk.tm ? ' ' + wk.tm : '') })]));
+        }
+        if (quick.length) card.appendChild(h('div', { class: 'quicks' }, quick));
+      }
+      card.appendChild(choices(YNx || YN, a.a, function (v) { a.a = v; advance(); }));
+      if (!ci.editing && !ci.resolve) {
+        var extra = [
+          h('button', { type: 'button', class: 'btn', text: '何もない（' + nextLabel + '）', 'aria-label': 'この講義は課題・小テストなし、復習不要として' + nextLabel, onclick: function () {
+            a.a = 'n'; a.q = 'n'; a.r = 'n';
+            commitCheckin();
+          } }),
+          h('button', { type: 'button', class: 'btn', text: '休講だった', 'aria-label': 'この講義は休講だったとして' + nextLabel, onclick: markCancelled }),
+          h('button', { type: 'button', class: 'btn', text: '今回はスキップ', 'aria-label': 'この講義の講義後チェックをスキップして' + nextLabel, onclick: function () {
+            var key = ymd(ci.day);
+            state.cc[key] = state.cc[key] || {};
+            if (!state.cc[key][c.id]) state.cc[key][c.id] = 2;
+            changed();
+            nextStep();
+          } })
+        ];
+        card.appendChild(h('div', { class: 'card-alt' }, [h('div', { class: 'nav' }, extra)]));
+      }
+    } else if (st === 'atype') {
+      var nth = 1 + (a.al ? a.al.length : 0);
+      card.appendChild(question('どんな課題？' + (nth > 1 ? '（' + nth + '件目）' : '')));
+      card.appendChild(choices(TYPES.map(function (t) { return [t, t]; }), a.type, function (v) { a.type = a.type === v ? '' : v; render(); }));
+      var note = h('input', { type: 'text', maxlength: '60', placeholder: '一言メモ（任意）', 'aria-label': '一言メモ（任意）' });
+      note.value = a.note;
+      note.addEventListener('input', function () { a.note = note.value; });
+      card.appendChild(note);
+      foot.push(h('button', { type: 'button', class: 'btn primary', text: '次へ', onclick: advance }));
+    } else if (st === 'adue') {
+      dueCard('a', '課題の期限は？' + (a.al && a.al.length ? '（' + (a.al.length + 1) + '件目）' : ''));
+    } else if (st === 'amore') {
+      card.appendChild(question('ほかにも課題はある？'));
+      var cnt = 1 + (a.al ? a.al.length : 0);
+      card.appendChild(h('p', { class: 'qs', text: 'ここまでに ' + cnt + ' 件入れました。' }));
+      card.appendChild(choices([['y', 'ある（もう1件入れる）'], ['n', 'ない']], '', function (v) {
+        if (v === 'y') {
+          if ((a.al || []).length >= 7) { ci.msg = '1講義で入れられる課題は8件までです。'; render(); return; }
+          a.al = (a.al || []).concat([{ type: a.type, note: a.note, aMode: a.aMode, aDate: a.aDate, aTime: a.aTime }]);
+          a.type = ''; a.note = ''; a.aMode = ''; a.aDate = ''; a.aTime = ''; a.aTimeOpen = false;
+          go('atype');
+        } else {
+          advance();
+        }
+      }));
+    } else if (st === 'q') {
+      card.appendChild(question(ci.resolve ? '次の講義で小テストはある？' : '次の講義で（授業中の）小テストは？'));
+      card.appendChild(choices(ci.resolve ? [['y', 'ある'], ['n', 'ない']] : YN, a.q, function (v) { a.q = v; advance(); }));
+    } else if (st === 'qdue') {
+      dueCard('q', '小テストはいつ？');
+    } else if (st === 'r') {
+      card.appendChild(question('復習は必要？'));
+      card.appendChild(choices(RN, a.r, function (v) { a.r = v; advance(); }));
+    } else if (st === 'rdue') {
+      dueCard('r', 'いつまでに復習する？');
+    } else {
+      card.appendChild(question(ci.resolve ? 'この内容で登録します' : a.prev ? '前回の回答です。直すところを押してください' : (a.copied ? '前回と同じ内容です。違うところだけ直してください' : 'この内容で登録します')));
+      var line = function (label, value, step) {
+        return h('button', { type: 'button', class: 'sumline', onclick: function () { ci.editing = true; go(step); } }, [
+          h('span', { class: 'sl-k', text: label }),
+          h('span', { class: 'sl-v', text: value }),
+          h('span', { class: 'sl-e', 'aria-hidden': 'true', text: '直す' })
+        ]);
+      };
+      var av = LABEL[a.a] || '未回答';
+      if (a.a === 'y') av += '（' + (a.type || '種類なし') + (a.note ? '：' + a.note : '') + '）　' + dueText('a');
+      var extras = (a.a === 'y' && a.al) ? a.al : [];
+      var extraDue = function (x) {
+        var t = x.aTime ? ' ' + x.aTime : '';
+        if (x.aMode === 'next') { var nx2 = nextClassDate(c, today); return nx2 ? '次の講義 ' + fmt(nx2) + t : '期限は不明'; }
+        if (x.aMode === 'date' && x.aDate) return fmt(parse(x.aDate)) + t;
+        return '期限は不明';
+      };
+      var qv = LABEL[a.q] || '未回答';
+      if (a.q === 'y') qv += '　' + dueText('q');
+      var rv = RLABEL[a.r] || '未回答';
+      if (a.r === 'y') rv += '　' + dueText('r');
+      var lines = [];
+      extras.forEach(function (x, k) {
+        lines.push(h('div', { class: 'sumline' }, [
+          h('span', { class: 'sl-k', text: '課題' + (k + 1) }),
+          h('span', { class: 'sl-v', text: (x.type || '種類なし') + (x.note ? '：' + x.note : '') + '　' + extraDue(x) }),
+          h('button', { type: 'button', class: 'link', text: '外す', onclick: function () { a.al = a.al.filter(function (_, i) { return i !== k; }); render(); } })
+        ]));
+      });
+      if (extras.length) av = (a.type || '種類なし') + (a.note ? '：' + a.note : '') + '　' + dueText('a');
+      lines.push(line(extras.length ? '課題' + (extras.length + 1) : '課題', av, 'a'), line('小テスト', qv, 'q'), line('復習', rv, 'r'));
+      card.appendChild(h('div', { class: 'sumlist' }, lines));
+      if (a.a === 'y') card.appendChild(h('button', { type: 'button', class: 'link card-link', text: '＋ 課題をもう1件追加', onclick: function () {
+        a.al = (a.al || []).concat([{ type: a.type, note: a.note, aMode: a.aMode, aDate: a.aDate, aTime: a.aTime }]);
+        a.type = ''; a.note = ''; a.aMode = ''; a.aDate = ''; a.aTime = ''; a.aTimeOpen = false;
+        ci.editing = true;
+        go('atype');
+      } }));
+      foot.push(h('button', { type: 'button', class: 'btn primary', text: last ? '登録して終わる' : '登録して次の講義へ', onclick: commitCheckin }));
+    }
+
+    var PH = ['課題', '小テスト', '復習', '確認'];
+    var phOf = function (stp) { return /^a/.test(stp) ? 0 : /^q/.test(stp) ? 1 : /^r/.test(stp) ? 2 : 3; };
+    var curPh = phOf(ci.step);
+    box.appendChild(h('ol', { class: 'phases', 'aria-label': '進み具合' }, PH.map(function (t, k) {
+      return h('li', { class: k === curPh ? 'on' : (k < curPh ? 'past' : ''), 'aria-current': k === curPh ? 'step' : null, text: t });
+    })));
+    box.appendChild(card);
+    box.appendChild(h('p', { class: 'msg' + (ci.msg ? '' : ' vh'), role: 'status', 'aria-live': 'polite', text: ci.msg || '' }));
+    var steps2 = stepsOf();
+    var pos = steps2.indexOf(ci.step);
+    if (pos > 0 && !ci.editing) foot.push(h('button', { type: 'button', class: 'btn', text: '戻る', onclick: back }));
+    foot.push(h('button', { type: 'button', class: 'link', text: 'やめる', onclick: closeCheckin }));
+    if (st === 'a' && !ci.editing && !ci.resolve) foot.push(swLink);
+    if (ci.older && !last && st === 'a') {
+      foot.push(h('button', { type: 'button', class: 'link', text: '残り ' + (ci.ids.length - ci.i) + ' 件をまとめて飛ばす', onclick: function () {
+        var rest = [];
+        for (var k = ci.i; k < ci.ids.length; k++) rest.push({ day: ci.days[k], id: ci.ids[k] });
+        skipSessions(rest);
+        changed();
+        ci.done = true;
+        render();
+      } }));
+    }
+    box.appendChild(h('div', { class: 'nav card-foot' }, foot));
+
+  }
+
+  function render() {
+    var today = todayDate();
+    if (ui.loading) {
+      ['main', 'settings', 'banner', 'view-btn', 'checkin'].forEach(function (id) { $(id).hidden = true; });
+      $('stats').textContent = (today.getMonth() + 1) + '月' + today.getDate() + '日 ' + DAYS[today.getDay()] + '曜日';
+      $('storage').textContent = '読み込み中…';
+      return;
+    }
+    renderStats(today);
+    var hasTT = state.courses.some(function (c) { return hasSchedule(c); });
+    var settings = ui.view === 'settings' || !state.courses.length;
+    $('ci-open').hidden = true;
+    $('view-btn').hidden = !!ui.ci || !state.courses.length;
+    $('view-label').textContent = settings ? '戻る' : '時間割';
+    $('htitle').textContent = ui.ci ? '講義後チェック' : (settings ? '時間割' : '今日');
+    $('main').hidden = !!ui.ci || settings;
+    $('settings').hidden = !!ui.ci || !settings;
+    var tk = ui.takeover;
+    $('tkbar').hidden = !!ui.ci || !tk;
+    if (tk) $('tktext').textContent = 'ログインする前にこのブラウザで入れた内容（講義 ' + tk.courses.length + '件・課題など ' + (Array.isArray(tk.items) ? tk.items.length : 0) + '件）があります。このアカウントに引き継ぎますか？';
+    $('exbar').hidden = !!ui.ci || !(state.courses.some(function (c) { return c.ex; }) || state.items.some(function (i) { return i.ex; }));
+    renderBanner(today, settings);
+    renderCheckin(today);
+    if (!ui.ci) {
+      renderForm();
+      renderQuick();
+      renderToast();
+      renderToday(today);
+      renderOpen(today);
+      renderOlder();
+      renderDone(today);
+      renderCourses();
+      if (!ui.openedOnce) {
+        ui.openedOnce = true;
+        $('adddet').open = state.items.length === 0 && state.courses.length > 0;
+      }
+    }
+    if (ui.wantCheck && !ui.ci && pendingSession()) startCheckin(true);
+  }
+
+  // ---------- events ----------
+  $('f-course').addEventListener('change', function () { ui.course = this.value; });
+  $('ci-open').addEventListener('click', function () { startCheckin(false); });
+  $('view-btn').addEventListener('click', function () {
+    ui.view = ui.view === 'settings' ? 'main' : 'settings';
+    ui.renaming = null;
+    ui.addSlot = null;
+    ui.confirmCourse = null;
+    render();
+    window.scrollTo(0, 0);
+  });
+  // Re-check every minute so the question appears once a period ends.
+  setInterval(function () {
+    if (!document.hidden && !ui.ci) { renderBanner(todayDate(), ui.view === 'settings' || !state.courses.length); renderToday(todayDate()); }
+  }, 60000);
+
+  $('form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var msg = $('msg');
+    var title = $('f-title').value.replace(/\s+/g, ' ').trim();
+    var course = $('f-course').value;
+    var due = $('f-due').value;
+    var tm = due && /^([01]\d|2[0-3]):[0-5]\d$/.test($('f-time').value) ? $('f-time').value : '';
+    if (!course) { msg.textContent = '先に講義を追加してください。'; return; }
+    if (!title) { msg.textContent = '内容を入力してください。'; return; }
+    if (due && !/^\d{4}-\d{2}-\d{2}$/.test(due)) { msg.textContent = '期限は日付で入力してください。'; return; }
+    if (ui.editing) {
+      var it = findItem(ui.editing);
+      if (it) { it.c = course; it.k = ui.kind; it.t = title; it.d = due; if (tm) it.tm = tm; else delete it.tm; }
+      endEdit();
+    } else {
+      if (state.items.length >= MAX_ITEMS) { msg.textContent = '件数が上限（' + MAX_ITEMS + '件）です。完了済みを削除してください。'; return; }
+      var no = { id: newId(), c: course, t: title, k: ui.kind, d: due, x: '' };
+      if (tm) no.tm = tm;
+      state.items.push(no);
+      ui.course = course;
+      $('f-title').value = '';
+      $('f-due').value = '';
+      $('f-time').value = '';
+      showTime(false);
+      msg.textContent = '';
+    }
+    ui.toast = null;
+    changed();
+    render();
+    $('f-title').focus();
+  });
+
+  $('f-cancel').addEventListener('click', function () { endEdit(); render(); });
+  $('f-t2359').addEventListener('click', function () { $('f-time').value = '23:59'; });
+  function showTime(on) { $('f-tfield').hidden = !on; $('f-topen').hidden = on; }
+  $('f-tclear').addEventListener('click', function () { $('f-time').value = ''; showTime(false); });
+  $('f-topen').addEventListener('click', function () { showTime(true); $('f-time').focus(); });
+
+  $('cform').addEventListener('submit', function (e) {
+    e.preventDefault();
+    var input = $('c-name');
+    var v = input.value.replace(/\s+/g, ' ').trim();
+    var m = $('cmsg');
+    if (!v) { m.textContent = '講義名を入力してください。'; return; }
+    if (state.courses.some(function (c) { return c.name.toLowerCase() === v.toLowerCase(); })) { m.textContent = '同じ名前の講義がすでにあります。'; return; }
+    if (state.courses.length >= 30) { m.textContent = '講義は30件まで追加できます。'; return; }
+    var id = 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 5);
+    var first = state.courses.length === 0;
+    state.courses.push({ id: id, n: v, name: v, a: ymd(todayDate()), col: freeColor(state.courses) });
+    if (!ui.course) ui.course = id;
+    if (first) { $('adddet').open = true; ui.view = 'settings'; }
+    ui.tt = id;
+    input.value = '';
+    m.textContent = '';
+    changed();
+    render();
+  });
+
+  $('sample').addEventListener('click', function () {
+    var t = todayDate();
+    var wd = t.getDay();
+    var a = 'c' + Date.now().toString(36) + 'a';
+    var b = 'c' + Date.now().toString(36) + 'b';
+    state.courses.push(
+      { id: a, n: '経営学入門', name: '経営学入門', s: [wd * 10 + 2], a: ymd(t), col: 0, ex: 1 },
+      { id: b, n: '民法総則', name: '民法総則', s: [wd * 10 + 3], a: ymd(t), col: 1, ex: 1 }
+    );
+    state.items.push(
+      { id: newId(), c: a, t: '第3回レポート', k: '課題', d: ymd(addDays(t, 2)), x: '', ex: 1 },
+      { id: newId(), c: b, t: '判例の要旨を読み直す', k: 'その他', d: '', x: '', ex: 1 },
+      { id: newId(), c: a, t: '復習', k: '復習', d: ymd(addDays(t, -1)), x: '', ex: 1 }
+    );
+    ui.course = a;
+    changed();
+    render();
+  });
+
+  // ---------- moving data between pages / devices ----------
+  var pendingImport = null;
+  $('xout').addEventListener('click', function () {
+    var txt = JSON.stringify(toStore());
+    var ta = $('xtext');
+    ta.value = txt;
+    var done = function () { $('xmsg').textContent = ''; ui.toast = { text: 'コピーしました。移したいページで貼り付けて読み込みます' }; renderToast(); };
+    var fallback = function () { ta.focus(); ta.select(); $('xmsg').textContent = 'コピーできなかったので、上の文字を全部選んでコピーしてください。'; };
+    try { navigator.clipboard.writeText(txt).then(done, fallback); } catch (e) { fallback(); }
+  });
+  function prepareImport(text) {
+    var d = null;
+    try { d = JSON.parse(String(text || '').trim()); } catch (e) { d = null; }
+    if (!d || !Array.isArray(d.courses)) { $('xmsg').textContent = '読み込めませんでした。「書き出す」でコピーした文字を、そのまま全部貼り付けてください。'; return; }
+    var n = toView(normalize(d));
+    pendingImport = n;
+    $('xmsg').textContent = '';
+    $('xcmsg').textContent = '講義 ' + n.courses.length + '件・課題など ' + n.items.length + '件で、今の内容を置き換えます。';
+    $('xconfirm').hidden = false;
+  }
+  $('xin').addEventListener('click', function () { prepareImport($('xtext').value); });
+  $('xfile').addEventListener('change', function () {
+    var file = this.files && this.files[0];
+    if (!file) return;
+    var rd = new FileReader();
+    rd.onload = function () { prepareImport(rd.result); };
+    rd.readAsText(file);
+    this.value = '';
+  });
+  $('xyes').addEventListener('click', function () {
+    if (!pendingImport) return;
+    state = pendingImport;
+    pendingImport = null;
+    $('xconfirm').hidden = true;
+    $('xtext').value = '';
+    ui.tt = null;
+    ui.toast = { text: '読み込みました' };
+    changed();
+    render();
+  });
+  $('xno').addEventListener('click', function () { pendingImport = null; $('xconfirm').hidden = true; });
+  $('lsin').addEventListener('click', signIn);
+  $('lsoff').addEventListener('click', function () {
+    ui.lsOff = true;
+    $('lsbar').hidden = true;
+  });
+  $('tkyes').addEventListener('click', function () {
+    var tk = ui.takeover;
+    if (!tk) return;
+    state = toView(normalize(tk));
+    ui.takeover = null;
+    try { localStorage.removeItem(LS_KEY); } catch (e) { /* ignore */ }
+    ui.toast = { text: '引き継ぎました' };
+    changed();
+    render();
+  });
+  $('tkno').addEventListener('click', function () {
+    ui.takeover = null;
+    try { localStorage.removeItem(LS_KEY); } catch (e) { /* ignore */ }
+    render();
+  });
+  $('exdel').addEventListener('click', function () {
+    // Only the example rows go. An example course the person has put their own items on is kept as a normal course.
+    state.items = state.items.filter(function (i) { return !i.ex; });
+    var gone = {};
+    state.courses.forEach(function (c) {
+      if (!c.ex) return;
+      if (state.items.some(function (i) { return i.c === c.id; })) delete c.ex;
+      else gone[c.id] = 1;
+    });
+    state.courses = state.courses.filter(function (c) { return !gone[c.id]; });
+    Object.keys(state.cc).forEach(function (k) {
+      Object.keys(gone).forEach(function (cid) { delete state.cc[k][cid]; });
+      if (!Object.keys(state.cc[k]).length) delete state.cc[k];
+    });
+    ui.tt = null;
+    ui.ci = null;
+    ui.toast = { text: '例を削除しました' };
+    changed();
+    render();
+  });
+
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && !ui.ci) render(); });
+
+  // ---------- start ----------
+  try { ui.wantCheck = location.hash === '#check'; } catch (e) { ui.wantCheck = false; }
+  ui.loading = true;
+  render();
+  initCloud();
+  initOcr();
+})();
+</script>
+
+<script src="firebase-config.js"></script>
+<script type="module">
+// Firebase bridge: the app script talks to window.KOMA_FB only.
+const V = '10.12.2';
+const done = () => { window.KOMA_FB_DONE = true; window.dispatchEvent(new Event('koma-fb')); };
+try {
+  const cfg = window.FIREBASE_CONFIG;
+  if (cfg && cfg.apiKey) {
+    const [{ initializeApp }, A, F] = await Promise.all([
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-app.js`),
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-auth.js`),
+      import(`https://www.gstatic.com/firebasejs/${V}/firebase-firestore.js`)
+    ]);
+    const app = initializeApp(cfg);
+    const auth = A.getAuth(app);
+    const db = F.getFirestore(app);
+    A.getRedirectResult(auth).catch(() => {});
+    window.KOMA_FB = {
+      onUser: (cb) => A.onAuthStateChanged(auth, cb),
+      async signIn() {
+        const p = new A.GoogleAuthProvider();
+        p.setCustomParameters({ prompt: 'select_account' });
+        try { await A.signInWithPopup(auth, p); }
+        catch (e) {
+          const c = e && e.code;
+          if (c === 'auth/popup-blocked' || c === 'auth/operation-not-supported-in-this-environment' || c === 'auth/cancelled-popup-request') await A.signInWithRedirect(auth, p);
+          else if (c !== 'auth/popup-closed-by-user') throw e;
+        }
+      },
+      signOut: () => A.signOut(auth),
+      doc(uid) {
+        const ref = F.doc(db, 'users', uid);
+        return {
+          set: (obj) => F.setDoc(ref, { json: JSON.stringify(obj), at: F.serverTimestamp() }),
+          onSnapshot: (cb, err) => F.onSnapshot(ref, (snap) => {
+            let data = null;
+            try { data = snap.exists() ? JSON.parse(snap.data().json) : null; } catch (e) { data = null; }
+            cb({ exists: !!data, data: () => data, metadata: { hasPendingWrites: snap.metadata.hasPendingWrites } });
+          }, err)
+        };
+      }
+    };
+  }
+} catch (e) { window.KOMA_FB = null; }
+done();
+</script>
+</body>
+</html>
